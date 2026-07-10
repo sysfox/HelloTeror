@@ -127,6 +127,10 @@
   /* 页面切换覆盖层（dark：深蓝黑底 + 强调色辉光，dramatic） */
   --transition-tile-bg: linear-gradient(135deg, #050507 0%, #0a1830 55%, #050507 100%);
   --transition-curtain-bg: linear-gradient(90deg, #050507 0%, #071528 45%, #0a2240 50%, #071528 55%, #050507 100%);
+
+  /* CRT 过渡磷光（dark：磷光绿，经典 CRT 单色屏） */
+  --crt-phosphor: #3aff7a;
+  --crt-phosphor-soft: rgba(58, 255, 122, 0.35);
 }
 
 [data-theme="light"] {
@@ -185,6 +189,10 @@
   /* 页面切换覆盖层（light：浅色底 + 强调色辉光，避免纯黑闪过） */
   --transition-tile-bg: linear-gradient(135deg, #f5f5f7 0%, #e3eefc 55%, #f5f5f7 100%);
   --transition-curtain-bg: linear-gradient(90deg, #f5f5f7 0%, #e3eefc 45%, #d6e8fa 50%, #e3eefc 55%, #f5f5f7 100%);
+
+  /* CRT 过渡磷光（light：琥珀，CRT 琥珀屏，白底上不刺眼） */
+  --crt-phosphor: #d97706;
+  --crt-phosphor-soft: rgba(217, 119, 6, 0.30);
 }
 
 /* 向后兼容旧类名 */
@@ -244,6 +252,10 @@
   /* 页面切换覆盖层（light：浅色底 + 强调色辉光，避免纯黑闪过） */
   --transition-tile-bg: linear-gradient(135deg, #f5f5f7 0%, #e3eefc 55%, #f5f5f7 100%);
   --transition-curtain-bg: linear-gradient(90deg, #f5f5f7 0%, #e3eefc 45%, #d6e8fa 50%, #e3eefc 55%, #f5f5f7 100%);
+
+  /* CRT 过渡磷光（light：琥珀，CRT 琥珀屏，白底上不刺眼） */
+  --crt-phosphor: #d97706;
+  --crt-phosphor-soft: rgba(217, 119, 6, 0.30);
 }
 
 @layer base {
@@ -626,6 +638,76 @@
     animation: aurora-crossfade 500ms ease;
   }
 
+  /* CRT 过渡叠加层：电源周期（关机→信号锁定雪噪→开机）。
+     三层子层基态 opacity:0 防 FOUC，由 pageTransitions 的 crt case 用 anime.js 抬升；
+     z-index 60 与 .page-curtain 同层，覆盖在 enter/exit 之上。 */
+  .crt-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 60;
+    overflow: hidden;
+  }
+  .crt-overlay > span {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    will-change: opacity;
+  }
+  /* 磷光晕：中心磷光 + 暗角，theme 感知（dark 磷光绿 / light 琥珀） */
+  .crt-glow {
+    background:
+      radial-gradient(ellipse at center, var(--crt-phosphor-soft) 0%, transparent 55%),
+      radial-gradient(ellipse at center, transparent 65%, rgba(0, 0, 0, 0.55) 100%);
+  }
+  /* 扫描线网格：横向细线，缓慢漂移制造活体 CRT 感 */
+  .crt-scanlines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.55) 0px,
+      rgba(0, 0, 0, 0.55) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    background-size: 100% 3px;
+    animation: crt-scanline-drift 6s linear infinite;
+  }
+  @keyframes crt-scanline-drift {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 0 3px;
+    }
+  }
+  /* 信号锁定雪噪：灰度 SVG feTurbulence，背景位置硬切 = 雪花闪烁（scramble） */
+  .crt-static {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 140px 140px;
+    image-rendering: pixelated;
+    animation: crt-static-shift 90ms steps(1, end) infinite;
+  }
+  @keyframes crt-static-shift {
+    0% {
+      background-position: 0 0;
+    }
+    20% {
+      background-position: -47px 33px;
+    }
+    40% {
+      background-position: 29px -61px;
+    }
+    60% {
+      background-position: -73px -19px;
+    }
+    80% {
+      background-position: 51px 42px;
+    }
+    100% {
+      background-position: 0 0;
+    }
+  }
+
   /* mask 过渡的强调色"幕布"：用站点主色从一侧扫过屏幕 */
   .page-curtain {
     position: fixed;
@@ -875,5 +957,20 @@
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
+  }
+}
+
+/* CRT overlay：减少动效下彻底隐态。
+   注意不能并入上面白名单（它强制 opacity:1，会让雪噪/扫描线闪现）。
+   runTransition 入口已对 reduced-motion 短路 → finish()，overlay 仅可能渲染一帧，
+   此规则确保那一帧也完全不可见、不抖动。 */
+@media (prefers-reduced-motion: reduce) {
+  .crt-overlay,
+  .crt-overlay > span,
+  .crt-static,
+  .crt-scanlines,
+  .crt-glow {
+    animation: none !important;
+    opacity: 0 !important;
   }
 }

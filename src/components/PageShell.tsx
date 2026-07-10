@@ -36,7 +36,7 @@ const TILE_COUNT = TILE_COLS * TILE_ROWS;
  * SPA 页面容器（anime.js 驱动切换）：
  * - 永远只有一个 active page 居中渲染
  * - 切换时 enter 层（新页）与 exit 层（旧页快照）同时存在，runTransition 用 timeline 驱动
- * - 四种切换：tiles 瓦片翻面 / curtain 幕布横扫 / zoom-blur 缩放模糊 / reveal iris 揭示
+ * - 四种切换：tiles 瓦片翻面 / curtain 幕布横扫 / zoom-blur 缩放模糊 / crt 电源周期
  * - exit 层用 .transition-exit-snapshot 强制子树可见，避免重挂载触发的 FOUC / 动画重播
  * - enter 层修复了旧版 bug（旧版 enter 永不动画）：现在 enter 渲染 pending（新页）
  * - 滚轮 / 触摸 / 方向键切换（useFullPageScroll），transitioning 期间锁定
@@ -51,6 +51,7 @@ export function PageShell() {
   const enterRef = useRef<HTMLDivElement>(null);
   const tilesRef = useRef<HTMLDivElement>(null);
   const curtainRef = useRef<HTMLDivElement>(null);
+  const crtRef = useRef<HTMLDivElement>(null);
 
   // current 变化 → 锁定 + 记录 pending（让两层同时渲染）
   useEffect(() => {
@@ -82,6 +83,7 @@ export function PageShell() {
       enterEl: enterRef.current,
       tilesContainer: tilesRef.current,
       curtainPanel: curtainRef.current,
+      crtOverlay: crtRef.current,
       finish,
     });
 
@@ -109,6 +111,7 @@ export function PageShell() {
 
   const showTiles = pending !== null && transition === "tiles";
   const showCurtain = pending !== null && transition === "curtain";
+  const showCrt = pending !== null && transition === "crt";
   const ActivePage = PAGES[pending ?? displayed];
   const ExitingPage = pending !== null ? PAGES[displayed] : null;
 
@@ -157,9 +160,23 @@ export function PageShell() {
         <div
           key={`curtain-${displayed}-to-${pending}`}
           ref={curtainRef}
-          className="curtain-panel"
+          className="curtain-panel curtain-panel--accent"
           aria-hidden
         />
+      )}
+
+      {/* crt 过渡叠加层：电源周期关机→信号锁定雪噪→开机，三层子层由 runTransition 驱动 opacity */}
+      {showCrt && (
+        <div
+          key={`crt-${displayed}-to-${pending}`}
+          ref={crtRef}
+          className="crt-overlay"
+          aria-hidden
+        >
+          <span className="crt-glow" />
+          <span className="crt-scanlines" />
+          <span className="crt-static" />
+        </div>
       )}
 
       <ScrollHint visible={!transitioning && current === "home"} />

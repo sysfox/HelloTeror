@@ -22,12 +22,12 @@ export type PageId =
  *  - tiles      瓦片网格翻面覆盖→揭示（两段式，最有冲击力）
  *  - curtain    强调色幕布横扫覆盖→揭示（两段式，融合站点主色）
  *  - zoom-blur  缩放+模糊交叉淡入淡出（一段式，电影感）
- *  - reveal     旧页缩小淡出 + 新页 clipPath iris 揭示（一段式）
+ *  - crt        CRT 电源周期：旧页塌成发丝亮线 → 信号锁定雪噪 → 新页从亮线展开（方向无关，signature）
  *
  * forward / backward 方向由 navigate 时按 PAGE_ORDER 索引判定，
- * 影响 tiles/curtain 的覆盖方向。
+ * 影响 tiles/curtain 的覆盖方向（crt 开关机不区分方向）。
  */
-export type TransitionType = "tiles" | "curtain" | "zoom-blur" | "reveal";
+export type TransitionType = "tiles" | "curtain" | "zoom-blur" | "crt";
 
 /**
  * 页面顺序常量（用于判断 forward / backward 方向以决定 tiles/curtain 方向）
@@ -43,13 +43,13 @@ export const PAGE_ORDER: PageId[] = [
 
 /**
  * 循环序列：覆盖 4 种动画，确保连续切换不会过于单调。
- * tiles 作为视觉强点放首位，zoom-blur/reveal 作为一段式放在奇偶位平衡节奏。
+ * tiles 作为视觉强点放首位，crt 作为 signature 放末位（1/4 频率，足够惊艳不致廉价）。
  */
 const TRANSITION_CYCLE: TransitionType[] = [
   "tiles",
   "curtain",
   "zoom-blur",
-  "reveal",
+  "crt",
 ];
 
 interface PageContextValue {

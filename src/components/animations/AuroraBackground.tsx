@@ -9,14 +9,20 @@ import {
 } from "@/lib/anime";
 
 /**
- * Hero 动效背景：取代静态网格+光晕。
- *  - 网格 opacity 呼吸（alternate loop）
- *  - 2~3 个 accent/紫光球漂浮 + 缩放（alternate loop，各自不同周期）
- *  - 桌面端光球轻微鼠标视差（spring 跟随）
+ * Hero 极光背景：多色光晕缓慢流动融合，取代旧 AnimatedBackground 网格光球 + HeroVisual Canvas。
  *
- * 视差与漂浮分层避免 transform 冲突：
+ * 视觉策略：
+ *  - 4 个大型 radial-gradient 光球（blue / purple / teal / orange），重 blur 融合成极光
+ *  - 各光球独立漂浮周期（18~25s alternate loop），周期错开避免同步
+ *  - 桌面端鼠标视差（spring 跟随，分层避免 transform 冲突）
+ *  - 超淡网格底纹（opacity 0.06 呼吸），保留科技感但不抢戏
+ *
+ * 分层（与 AnimatedBackground 一致）：
  *   wrapper(定位 + 视差 x/y) → 内层光球(漂浮 translateX/translateY/scale)
- * 低强度不抢前景。reduced-motion 静态。
+ *
+ * 主题安全：纯 DOM + CSS gradient，无 Canvas fillStyle 硬编码。
+ * rgba 透明色在 light 模式下自然减弱，无需 MutationObserver。
+ * reduced-motion 静态。
  */
 type OrbConfig = {
   pos: React.CSSProperties;
@@ -29,32 +35,40 @@ type OrbConfig = {
 
 const ORBS: OrbConfig[] = [
   {
-    pos: { left: "calc(50% - 300px)", top: "calc(30% - 300px)" },
+    pos: { left: "-8%", top: "-12%" },
+    size: 700,
+    bg: "radial-gradient(circle, rgba(41,151,255,0.28), transparent 70%)",
+    blur: 140,
+    float: { tx: [-60, 60], ty: [-40, 40], sc: [1, 1.2], dur: 18000 },
+    parallax: 16,
+  },
+  {
+    pos: { right: "-6%", top: "8%" },
     size: 600,
-    bg: "radial-gradient(circle, rgba(41,151,255,0.20), transparent 70%)",
+    bg: "radial-gradient(circle, rgba(175,82,222,0.24), transparent 70%)",
+    blur: 130,
+    float: { tx: [50, -70], ty: [30, -50], sc: [1.1, 0.9], dur: 22000 },
+    parallax: 24,
+  },
+  {
+    pos: { left: "12%", bottom: "-10%" },
+    size: 550,
+    bg: "radial-gradient(circle, rgba(52,199,89,0.20), transparent 70%)",
     blur: 120,
-    float: { tx: [-40, 40], ty: [-30, 30], sc: [1, 1.15], dur: 12000 },
-    parallax: 14,
+    float: { tx: [-40, 60], ty: [50, -30], sc: [0.95, 1.15], dur: 20000 },
+    parallax: 20,
   },
   {
-    pos: { right: "20%", bottom: "18%" },
-    size: 420,
-    bg: "radial-gradient(circle, rgba(175,82,222,0.16), transparent 70%)",
+    pos: { right: "18%", bottom: "0%" },
+    size: 450,
+    bg: "radial-gradient(circle, rgba(255,149,0,0.16), transparent 70%)",
     blur: 110,
-    float: { tx: [30, -50], ty: [20, -40], sc: [1.1, 0.95], dur: 15000 },
-    parallax: 22,
-  },
-  {
-    pos: { left: "16%", top: "20%" },
-    size: 360,
-    bg: "radial-gradient(circle, rgba(41,151,255,0.12), transparent 70%)",
-    blur: 100,
-    float: { tx: [-20, 50], ty: [40, -20], sc: [0.95, 1.1], dur: 18000 },
-    parallax: 30,
+    float: { tx: [60, -40], ty: [-30, 50], sc: [1.05, 0.95], dur: 25000 },
+    parallax: 28,
   },
 ];
 
-export function AnimatedBackground({ className = "" }: { className?: string }) {
+export function AuroraBackground({ className = "" }: { className?: string }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const wrapRefs = useRef<(HTMLDivElement | null)[]>([]);
   const orbRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -64,11 +78,11 @@ export function AnimatedBackground({ className = "" }: { className?: string }) {
 
     const cleanups: Array<() => void> = [];
 
-    // 网格呼吸
+    // 网格呼吸（极淡，慢节奏）
     if (gridRef.current) {
       const a = animate(gridRef.current, {
-        opacity: [0.1, 0.2],
-        duration: 6000,
+        opacity: [0.05, 0.1],
+        duration: 9000,
         loop: true,
         alternate: true,
         ease: "inOutSine",
@@ -130,7 +144,7 @@ export function AnimatedBackground({ className = "" }: { className?: string }) {
     >
       <div
         ref={gridRef}
-        className="absolute inset-0 opacity-[0.15]"
+        className="absolute inset-0 opacity-[0.08]"
         style={{
           backgroundImage:
             "linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px)",

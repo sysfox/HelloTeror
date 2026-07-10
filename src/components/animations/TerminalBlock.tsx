@@ -5,23 +5,52 @@ import { Copy, Check } from "lucide-react";
 import { prefersReducedMotion } from "@/lib/anime";
 
 /**
- * 终端命令块（animejs.com `npm i animejs` 的对应物）：
- *  - 打字机逐字输出 `~ whoami` / `~ cat role.txt` 及其结果
- *  - 闪烁光标（CSS .terminal-cursor）在打字期间显示，完成即停
- *  - 标题栏三色圆点 + 复制按钮（复制完整输出）
+ * 终端命令块（animejs.com 风格 + 语法高亮 + 逐行打字机）：
+ *  - 多行终端会话（whoami / cat about.md / ls skills/ / status --now）
+ *  - 语法高亮：prompt(accent) / 命令(primary) / 输出(secondary) / 状态(green)
+ *  - 逐行逐字打字机：行间 250ms 停顿，字符间 38~60ms 随机
+ *  - 闪烁光标（.terminal-cursor）跟随当前打字位置，完成后停在末尾
+ *  - 标题栏三色圆点 + 复制按钮（复制完整会话）
  *  - 同心圆角：外层 rounded-xl，标题栏/内容内嵌
- *  - reduced-motion：直接显示完整输出，无打字机
+ *  - reduced-motion：直接显示完整会话，无打字机
  *
  * 由父级传入 startDelay 控制打字开始时机（与 Hero 入场时序串联）。
  */
-type Line = { prompt: string; output: string };
 
-const LINES: Line[] = [
-  { prompt: "whoami", output: "Teror Fox" },
-  { prompt: "cat role.txt", output: "Student && Developer" },
+type Line =
+  | { type: "prompt"; command: string }
+  | { type: "output"; text: string; accent?: boolean }
+  | { type: "blank" };
+
+const PROMPT_PREFIX = "~/teror-fox $ ";
+
+const SESSION: Line[] = [
+  { type: "prompt", command: "whoami" },
+  { type: "output", text: "teror-fox" },
+  { type: "blank" },
+  { type: "prompt", command: "cat about.md" },
+  { type: "output", text: "# Student && Developer" },
+  { type: "output", text: "Fighting for the AI age" },
+  { type: "blank" },
+  { type: "prompt", command: "ls skills/" },
+  { type: "output", text: "typescript/  nextjs/  animejs/  python/  rust/" },
+  { type: "blank" },
+  { type: "prompt", command: "status --now" },
+  { type: "output", text: "● online · UTC+8 · v2026.07", accent: true },
 ];
 
-const FULL_TEXT = LINES.map((l) => `~ ${l.prompt}\n${l.output}`).join("\n");
+/** 复制用完整文本（含 prompt 前缀） */
+const FULL_TEXT = SESSION.map((l) => {
+  if (l.type === "prompt") return `${PROMPT_PREFIX}${l.command}`;
+  if (l.type === "output") return l.text;
+  return "";
+}).join("\n");
+
+type RenderedLine = {
+  type: "prompt" | "output" | "blank";
+  typed: string;
+  accent?: boolean;
+};
 
 export function TerminalBlock({
   startDelay = 0,
@@ -30,8 +59,7 @@ export function TerminalBlock({
   startDelay?: number;
   className?: string;
 }) {
-  const [typed, setTyped] = useState<string>("");
-  const [done, setDone] = useState(false);
+  const [lines, setLines] = useState<RenderedLine[]>([]);
   const [copied, setCopied] = useState(false);
   const timersRef = useRef<number[]>([]);
 
@@ -40,36 +68,66 @@ export function TerminalBlock({
     timers.length = 0;
 
     if (prefersReducedMotion()) {
-      // reduced-motion 兜底：直接显示完整文本，跳过逐字动画
+      // reduced-motion 兜底：直接渲染完整会话
+      const full: RenderedLine[] = SESSION.map((l) => {
+        if (l.type === "prompt") return { type: "prompt", typed: l.command };
+        if (l.type === "output")
+          return { type: "output", typed: l.text, accent: l.accent };
+        return { type: "blank", typed: "" };
+      });
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTyped(FULL_TEXT);
-      setDone(true);
+      setLines(full);
       return;
     }
 
-    // 展开为字符序列（含换行）
-    const seq: string[] = [];
-    LINES.forEach((l) => {
-      `~ ${l.prompt}`.split("").forEach((c) => seq.push(c));
-      seq.push("\n");
-      l.output.split("").forEach((c) => seq.push(c));
-      seq.push("\n");
-    });
+    // 逐行逐字打字机
+    let lineIdx = 0;
 
-    let i = 0;
     const startT = window.setTimeout(() => {
-      const tick = () => {
-        if (i >= seq.length) {
-          setDone(true);
+      const processLine = () => {
+        if (lineIdx >= SESSION.length) {
           return;
         }
-        i++;
-        setTyped(seq.slice(0, i).join(""));
-        const ch = seq[i - 1];
-        const dt = ch === "\n" ? 170 : 40 + Math.random() * 28;
-        timers.push(window.setTimeout(tick, dt));
+        const line = SESSION[lineIdx];
+
+        if (line.type === "blank") {
+          setLines((prev) => [...prev, { type: "blank", typed: "" }]);
+          lineIdx++;
+          timers.push(window.setTimeout(processLine, 120));
+          return;
+        }
+
+        // 初始化当前行（typed=""）
+        const initial: RenderedLine =
+          line.type === "prompt"
+            ? { type: "prompt", typed: "" }
+            : { type: "output", typed: "", accent: line.accent };
+        setLines((prev) => [...prev, initial]);
+
+        const fullText = line.type === "prompt" ? line.command : line.text;
+        let charIdx = 0;
+
+        const typeChar = () => {
+          if (charIdx >= fullText.length) {
+            // 当前行打完，停顿后处理下一行
+            lineIdx++;
+            timers.push(window.setTimeout(processLine, 250));
+            return;
+          }
+          charIdx++;
+          const typedSlice = fullText.slice(0, charIdx);
+          setLines((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            next[next.length - 1] = { ...last, typed: typedSlice };
+            return next;
+          });
+          const dt = 38 + Math.random() * 22;
+          timers.push(window.setTimeout(typeChar, dt));
+        };
+        typeChar();
       };
-      tick();
+      processLine();
     }, startDelay);
     timers.push(startT);
 
@@ -122,22 +180,56 @@ export function TerminalBlock({
           {copied ? <Check size={13} /> : <Copy size={13} />}
         </button>
       </div>
-      {/* 内容：打字机输出 + 光标 */}
-      <pre
-        className="px-3 py-3 text-[12px] sm:text-[13px] font-mono leading-relaxed whitespace-pre-wrap break-words"
-        style={{ color: "var(--text-secondary)", minHeight: "5.5rem" }}
+      {/* 内容：逐行渲染 + 语法高亮 */}
+      <div
+        className="px-3 py-3 text-[13px] sm:text-[14px] font-mono leading-relaxed whitespace-pre-wrap break-words"
+        style={{ color: "var(--text-secondary)", minHeight: "13rem" }}
       >
-        {typed}
-        {!done && (
-          <span
-            className="terminal-cursor"
-            style={{ color: "var(--accent)" }}
-            aria-hidden
-          >
-            ▋
-          </span>
-        )}
-      </pre>
+        {lines.map((line, i) => {
+          const isLast = i === lines.length - 1;
+          if (line.type === "blank") {
+            return <div key={i} className="h-[1.4em]" />;
+          }
+          if (line.type === "prompt") {
+            return (
+              <div key={i}>
+                <span style={{ color: "var(--accent)" }}>{PROMPT_PREFIX}</span>
+                <span style={{ color: "var(--text-primary)" }}>{line.typed}</span>
+                {isLast && (
+                  <span
+                    className="terminal-cursor"
+                    style={{ color: "var(--accent)" }}
+                    aria-hidden
+                  >
+                    ▋
+                  </span>
+                )}
+              </div>
+            );
+          }
+          // output 行
+          return (
+            <div key={i}>
+              <span
+                style={{
+                  color: line.accent ? "#28c840" : "var(--text-secondary)",
+                }}
+              >
+                {line.typed}
+              </span>
+              {isLast && (
+                <span
+                  className="terminal-cursor"
+                  style={{ color: "var(--accent)" }}
+                  aria-hidden
+                >
+                  ▋
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

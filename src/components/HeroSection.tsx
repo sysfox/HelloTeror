@@ -112,7 +112,7 @@ export function HeroSection() {
                 className="text-[11px] font-mono tabular-nums"
                 style={{ color: "var(--text-tertiary)" }}
               >
-                v2026.07
+                {new Date().getFullYear()}.{String(new Date().getMonth() + 1).padStart(2, '0')}
               </span>
               <span
                 className="w-px h-3"

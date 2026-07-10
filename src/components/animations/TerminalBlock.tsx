@@ -36,8 +36,10 @@ const SESSION: Line[] = [
   { type: "output", text: "typescript/  nextjs/  animejs/  python/  rust/" },
   { type: "blank" },
   { type: "prompt", command: "status --now" },
-  { type: "output", text: "● online · UTC+8 · v2026.07", accent: true },
+  { type: "output", text: `● online · UTC+8 · ${new Date().getFullYear()}.${String(new Date().getMonth() + 1).padStart(2, '0')}`, accent: true },
 ];
+
+
 
 /** 复制用完整文本（含 prompt 前缀） */
 const FULL_TEXT = SESSION.map((l) => {

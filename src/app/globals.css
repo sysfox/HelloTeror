@@ -821,6 +821,33 @@
   }
 }
 
+/* 终端光标闪烁：steps(2) 产生硬切换的"打字机"闪烁感 */
+@keyframes terminal-blink {
+  to {
+    opacity: 0;
+  }
+}
+.terminal-cursor {
+  display: inline-block;
+  animation: terminal-blink 1s steps(2, start) infinite;
+}
+
+/* 在线状态点呼吸（用于 Hero 元数据条） */
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(40, 200, 64, 0.5);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 4px rgba(40, 200, 64, 0);
+  }
+}
+.status-pulse {
+  animation: status-pulse 2.4s ease-in-out infinite;
+}
+
 /* 尊重用户偏好：减少动效 */
 @media (prefers-reduced-motion: reduce) {
   .page-fade-in,
@@ -829,6 +856,8 @@
   .text-mask-reveal > .text-mask-reveal__inner,
   .shimmer-line::after,
   .breathe-glow,
+  .status-pulse,
+  .terminal-cursor,
   .spin-slow,
   .page-enter,
   .page-exit,

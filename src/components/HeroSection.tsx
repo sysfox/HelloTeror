@@ -265,25 +265,7 @@ export function HeroSection() {
                 ))}
               </div>
 
-              {/* 技能标签条：横向排列，hover 高亮 */}
-              <div
-                className="mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-2"
-                data-stagger-item
-              >
-                {SKILLS.map((s) => (
-                  <span
-                    key={s}
-                    className="inline-flex items-center px-2.5 h-7 rounded-md text-[11px] font-mono border theme-transition transition-colors hover:text-[var(--text-secondary)] hover:border-[var(--accent-border)] hover:bg-[var(--surface-hover)]"
-                    style={{
-                      borderColor: "var(--border-subtle)",
-                      color: "var(--text-tertiary)",
-                      background: "var(--surface)",
-                    }}
-                  >
-                    {s}
-                  </span>
-                ))}
-              </div>
+            
             </StaggerGroup>
           </div>
 

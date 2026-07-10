@@ -113,6 +113,26 @@ function StatCardSkeleton() {
   );
 }
 
+function ExtraStat({
+  value,
+  label,
+  start,
+}: {
+  value: number;
+  label: string;
+  start: boolean;
+}) {
+  const v = useCountUp(value, { duration: 1600, start, decimals: 0 });
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="font-mono" style={{ color: "var(--text-primary)" }}>
+        {v.toLocaleString()}
+      </span>
+      <span>{label}</span>
+    </span>
+  );
+}
+
 export function StatsSection() {
   const { data, loading } = useApiData<GitHubStatsResponse>("/api/github/stats");
 
@@ -225,15 +245,12 @@ export function StatsSection() {
             style={{ animationDelay: "0.85s", color: "var(--text-tertiary)" }}
           >
             {EXTRA_STATS.map((s) => (
-              <span key={s.id} className="inline-flex items-center gap-2">
-                <span
-                  className="font-mono"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {s.value}
-                </span>
-                <span>{s.label}</span>
-              </span>
+              <ExtraStat
+                key={s.id}
+                value={s.value}
+                label={s.label}
+                start={start}
+              />
             ))}
             <a
               href="https://github.com/sysfox"

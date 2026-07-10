@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X, Mail, Sun, Moon } from "lucide-react";
+import { animate, EASE, prefersReducedMotion } from "@/lib/anime";
 import { cn } from "@/lib/utils";
 import { usePage, type PageId } from "@/contexts/PageContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -46,6 +47,63 @@ export function SiteNav() {
   const { theme, toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
 
+  const ulRef = useRef<HTMLUListElement>(null);
+  const indicatorRef = useRef<HTMLSpanElement>(null);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // 滑动指示器：current 变化时 anime.js 把 accent 圆点滑到激活 tab 中心；
+  // 首次定位 / reduced-motion 直接 snap。translateX(-50%) 让圆点居中于 left 锚点。
+  useEffect(() => {
+    const ul = ulRef.current;
+    const ind = indicatorRef.current;
+    if (!ul || !ind) return;
+    const activeIdx = NAV_LINKS.findIndex((l) => l.id === current);
+    const btn = tabRefs.current[activeIdx];
+    if (!btn) return;
+    const ulRect = ul.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const targetLeft = `${btnRect.left - ulRect.left + btnRect.width / 2}px`;
+
+    ind.style.opacity = "1";
+
+    if (prefersReducedMotion()) {
+      ind.style.left = targetLeft;
+      return;
+    }
+
+    const fromLeft = ind.style.left; // 首次为 "" → from=to，无位移仅定位
+    if (!fromLeft) {
+      ind.style.left = targetLeft;
+      return;
+    }
+
+    const anim = animate(ind, {
+      left: [fromLeft, targetLeft],
+      duration: 420,
+      ease: EASE.expo,
+    });
+    return () => {
+      anim.pause();
+    };
+  }, [current]);
+
+  // resize 重测距 snap（避免 tab 宽度变化后指示器错位）
+  useEffect(() => {
+    const reposition = () => {
+      const ul = ulRef.current;
+      const ind = indicatorRef.current;
+      if (!ul || !ind) return;
+      const activeIdx = NAV_LINKS.findIndex((l) => l.id === current);
+      const btn = tabRefs.current[activeIdx];
+      if (!btn) return;
+      const ulRect = ul.getBoundingClientRect();
+      const btnRect = btn.getBoundingClientRect();
+      ind.style.left = `${btnRect.left - ulRect.left + btnRect.width / 2}px`;
+    };
+    window.addEventListener("resize", reposition);
+    return () => window.removeEventListener("resize", reposition);
+  }, [current]);
+
   return (
     <header className="site-nav fixed top-0 left-0 right-0 z-50 theme-transition">
       <nav className="content-max-width flex items-center justify-between h-12 md:h-14">
@@ -69,17 +127,26 @@ export function SiteNav() {
           <span className="hidden sm:inline text-sm">Teror Fox</span>
         </button>
 
-        {/* Desktop tabs */}
-        <ul className="hidden md:flex items-center gap-1 text-sm">
-          {NAV_LINKS.map((link) => {
+        {/* Desktop tabs：单一滑动 accent 指示器，current 变化时 anime.js 滑动 */}
+        <ul ref={ulRef} className="relative hidden md:flex items-center gap-1 text-sm">
+          <span
+            ref={indicatorRef}
+            aria-hidden
+            className="pointer-events-none absolute -bottom-0.5 w-1 h-1 rounded-full bg-[var(--accent)]"
+            style={{ left: 0, transform: "translateX(-50%)", opacity: 0 }}
+          />
+          {NAV_LINKS.map((link, i) => {
             const active = current === link.id;
             return (
               <li key={link.id}>
                 <button
+                  ref={(el) => {
+                    tabRefs.current[i] = el;
+                  }}
                   type="button"
                   onClick={() => navigate(link.id)}
                   className={cn(
-                    "relative px-3 py-1.5 rounded-full transition-all duration-300 theme-transition",
+                    "relative px-3 py-1.5 rounded-full transition-colors duration-300 theme-transition",
                     active
                       ? "text-[var(--text-primary)] bg-[var(--surface-strong)]"
                       : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
@@ -87,12 +154,6 @@ export function SiteNav() {
                   aria-current={active ? "page" : undefined}
                 >
                   {link.label}
-                  {active && (
-                    <span
-                      className="absolute left-1/2 -translate-x-1/2 -bottom-0.5 w-1 h-1 rounded-full bg-[var(--accent)]"
-                      aria-hidden
-                    />
-                  )}
                 </button>
               </li>
             );

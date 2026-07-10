@@ -59,6 +59,9 @@ export default function RootLayout({
         trackScreenViews={true}
         trackAttributes={true}
         trackOutgoingLinks={true}
+        sessionReplay={{
+          enabled: true,
+        }}
         apiUrl="https://op.trfox.top"
       />
       </head>

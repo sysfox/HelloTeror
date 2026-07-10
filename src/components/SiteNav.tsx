@@ -62,7 +62,8 @@ export function SiteNav() {
             alt="Teror Fox"
             width={32}
             height={32}
-            className="w-8 h-8 rounded-full"            
+            loading="lazy"
+            className="w-8 h-8 rounded-full object-cover"             
           />
 
           <span className="hidden sm:inline text-sm">Teror Fox</span>

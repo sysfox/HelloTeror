@@ -157,7 +157,7 @@ export function PageShell() {
         <div
           key={`curtain-${displayed}-to-${pending}`}
           ref={curtainRef}
-          className="curtain-panel curtain-panel--accent"
+          className="curtain-panel"
           aria-hidden
         />
       )}

@@ -90,6 +90,7 @@ export function HeroSection() {
                   width={28}
                   height={28}
                   className="w-7 h-7 rounded-full object-cover"
+                  loading="lazy"
                   style={{ outline: "1px solid var(--border-subtle)" }}
                 />
                 <span

@@ -62,6 +62,8 @@ export function useApiData<T>(
   useEffect(() => {
     const fresh = readCache<T>(path, ttl);
     if (fresh !== null) {
+      // 命中缓存：同步回填 state，跳过 fetch，避免 loading 闪烁
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setData(fresh);
       setLoading(false);
       setError(null);

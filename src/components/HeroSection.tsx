@@ -37,6 +37,8 @@ export function HeroSection() {
 
   useEffect(() => {
     const played = sessionStorage.getItem(LOADER_KEY);
+    // mount 时根据 loader 是否播放过决定入场延迟（首次访问长延迟，已访问过短延迟）
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStartDelay(played ? 200 : 1900);
     const raf = requestAnimationFrame(() => setReady(true));
     return () => cancelAnimationFrame(raf);

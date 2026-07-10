@@ -48,6 +48,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const resolved = resolveInitialTheme();
     if (resolved && resolved !== theme) {
+      // mount 时同步真实主题，避免 SSR dark 默认值与客户端偏好不一致的闪烁
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setThemeState(resolved);
     }
     // 仅在 mount 时跑一次

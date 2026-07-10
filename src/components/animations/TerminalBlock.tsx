@@ -40,6 +40,8 @@ export function TerminalBlock({
     timers.length = 0;
 
     if (prefersReducedMotion()) {
+      // reduced-motion 兜底：直接显示完整文本，跳过逐字动画
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTyped(FULL_TEXT);
       setDone(true);
       return;

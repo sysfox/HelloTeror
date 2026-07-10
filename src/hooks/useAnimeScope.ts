@@ -21,7 +21,9 @@ export function useAnimeScope(
   deps: unknown[]
 ) {
   const rootRef = useRef<HTMLDivElement>(null);
+  // 最新 ref 模式：让 effect 总能拿到最新 setup，避免 stale closure；写 ref 在 render 期是安全的（无副作用）
   const setupRef = useRef(setup);
+  // eslint-disable-next-line react-hooks/refs
   setupRef.current = setup;
 
   useEffect(() => {

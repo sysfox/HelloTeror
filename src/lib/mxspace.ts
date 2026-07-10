@@ -125,6 +125,8 @@ export async function fetchBlogPosts(): Promise<BlogPost[]> {
     if (merged.length === 0) return FALLBACK_POSTS;
 
     merged.sort((a, b) => b._sort - a._sort);
+    // _sort 仅用于排序，此处 destructure rest 排除该内部字段
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return merged.slice(0, 5).map(({ _sort, ...post }) => post);
   } catch {
     return FALLBACK_POSTS;

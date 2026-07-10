@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { usePage, type PageId } from "@/contexts/PageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import Image from "next/image";
+import { SOCIAL_LINKS } from "@/config/site";
 
 const NAV_LINKS: { id: PageId; label: string }[] = [
   { id: "home", label: "Home" },
@@ -22,6 +23,22 @@ function GithubIcon({ className }: { className?: string }) {
       <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.14 0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z" />
     </svg>
   );
+}
+
+function BiliBiliIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 0 1-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.573 4.44c.071.071.134.142.187.213h4.267a.836.836 0 0 1 .16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.764-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.387-.947.258-.257.574-.386.946-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z" />
+    </svg>
+  );
+}
+
+/** 按 SOCIAL_LINKS id 渲染对应社交图标 */
+function SocialIcon({ id }: { id: string }) {
+  if (id === "github") return <GithubIcon className="w-4 h-4" />;
+  if (id === "bilibili") return <BiliBiliIcon className="w-4 h-4" />;
+  if (id === "email") return <Mail size={15} />;
+  return null;
 }
 
 export function SiteNav() {
@@ -97,32 +114,26 @@ export function SiteNav() {
           >
             {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
           </button>
-          <a
-            href="https://github.com/sysfox"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center w-9 h-9 rounded-full border theme-transition"
-            style={{
-              borderColor: "var(--border-subtle)",
-              background: "var(--surface)",
-              color: "var(--text-tertiary)",
-            }}
-            aria-label="GitHub"
-          >
-            <GithubIcon className="w-4 h-4" />
-          </a>
-          <a
-            href="mailto:i@trfox.top"
-            className="inline-flex items-center justify-center w-9 h-9 rounded-full border theme-transition"
-            style={{
-              borderColor: "var(--border-subtle)",
-              background: "var(--surface)",
-              color: "var(--text-tertiary)",
-            }}
-            aria-label="Email"
-          >
-            <Mail size={15} />
-          </a>
+          {SOCIAL_LINKS.map((link) => {
+            const isExternal = !link.href.startsWith("mailto:");
+            return (
+              <a
+                key={link.id}
+                href={link.href}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noopener noreferrer" : undefined}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full border theme-transition"
+                style={{
+                  borderColor: "var(--border-subtle)",
+                  background: "var(--surface)",
+                  color: "var(--text-tertiary)",
+                }}
+                aria-label={link.label}
+              >
+                <SocialIcon id={link.id} />
+              </a>
+            );
+          })}
         </div>
 
         {/* Mobile toggle */}
@@ -195,24 +206,22 @@ export function SiteNav() {
               {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
               {theme === "dark" ? "Light" : "Dark"}
             </button>
-            <a
-              href="https://github.com/sysfox"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-transition"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              <GithubIcon className="w-4 h-4" />
-              GitHub
-            </a>
-            <a
-              href="mailto:i@trfox.top"
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-transition"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              <Mail size={14} />
-              Email
-            </a>
+            {SOCIAL_LINKS.map((link) => {
+              const isExternal = !link.href.startsWith("mailto:");
+              return (
+                <a
+                  key={link.id}
+                  href={link.href}
+                  target={isExternal ? "_blank" : undefined}
+                  rel={isExternal ? "noopener noreferrer" : undefined}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-transition"
+                  style={{ color: "var(--text-tertiary)" }}
+                >
+                  <SocialIcon id={link.id} />
+                  {link.label}
+                </a>
+              );
+            })}
           </li>
         </ul>
       </div>

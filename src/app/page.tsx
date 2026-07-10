@@ -1,6 +1,7 @@
 import { PageProvider } from "@/contexts/PageContext";
 import { PageShell } from "@/components/PageShell";
 import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
         <main className="relative flex-1 pt-12 md:pt-14 overflow-hidden">
           <PageShell />
         </main>
+        <SiteFooter />
       </div>
     </PageProvider>
   );

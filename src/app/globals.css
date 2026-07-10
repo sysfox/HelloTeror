@@ -341,6 +341,15 @@
     animation: fade-up-soft 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
+  /* Footer 链接：弱化态 + hover 强调（自包含 color transition，无需 theme-transition） */
+  .footer-link {
+    color: var(--text-tertiary);
+    transition: color 200ms ease;
+  }
+  .footer-link:hover {
+    color: var(--accent);
+  }
+
   /* 模糊聚焦入场：从模糊到清晰，简约而有质感 */
   .blur-focus-in {
     opacity: 0;

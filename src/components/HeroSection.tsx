@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUpRight, Mail } from "lucide-react";
+import Image from "next/image";
 import { usePage } from "@/contexts/PageContext";
 import { AnimatedBackground } from "@/components/animations/AnimatedBackground";
 import { AnimeText } from "@/components/animations/AnimeText";
@@ -21,6 +22,35 @@ export function HeroSection() {
       <AnimatedBackground />
 
       <div className="relative flex flex-col items-center text-center max-w-3xl">
+        {/* Avatar */}
+        <div
+          className="relative mb-5 fade-up-soft"
+          style={{ animationDelay: "0.15s" }}
+        >
+          <div
+            className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 transition-all duration-500 group"
+            style={{
+              borderColor: "var(--accent)",
+              boxShadow: "0 0 20px var(--accent-glow)",
+            }}
+          >
+            <Image
+              src="https://avatars.githubusercontent.com/u/99103591?v=4"
+              alt="Teror Fox"
+              width={96}
+              height={96}
+              className="w-full h-full object-cover"
+            />
+            <div
+              className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            />
+          </div>
+          <div
+            className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#28c840] border-2 flex items-center justify-center"
+            style={{ borderColor: "var(--surface)" }}
+          />
+        </div>
+
         {/* Eyebrow：CSS 淡入，先于名字出现 */}
         <p
           className="mb-5 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border theme-transition fade-up-soft"
@@ -29,10 +59,9 @@ export function HeroSection() {
             background: "var(--surface)",
             color: "var(--text-secondary)",
             backdropFilter: "blur(8px)",
-            animationDelay: "0.1s",
+            animationDelay: "0.25s",
           }}
         >
-          <span className="text-base">🦊</span>
           <span className="font-mono">Hello World</span>
           <span
             className="w-px h-3"

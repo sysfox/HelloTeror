@@ -5,6 +5,7 @@ import { Menu, X, Mail, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePage, type PageId } from "@/contexts/PageContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import Image from "next/image";
 
 const NAV_LINKS: { id: PageId; label: string }[] = [
   { id: "home", label: "Home" },
@@ -39,12 +40,14 @@ export function SiteNav() {
           style={{ color: "var(--text-primary)" }}
           aria-label="Teror Fox home"
         >
-          <span
-            className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-br from-[var(--accent)] to-[#0a5fb8] text-white text-sm shadow-[0_0_12px_var(--accent-glow)] transition-transform duration-500 group-hover:scale-110"
-            aria-hidden
-          >
-            TF
-          </span>
+          <Image
+            src="https://avatars.githubusercontent.com/u/99103591?v=4"
+            alt="Teror Fox"
+            width={32}
+            height={32}
+            className="w-8 h-8 rounded-full"            
+          />
+
           <span className="hidden sm:inline text-sm">Teror Fox</span>
         </button>
 

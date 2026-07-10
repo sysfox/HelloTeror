@@ -8,9 +8,10 @@ import {
   Award,
   type LucideIcon,
 } from "lucide-react";
-import { AnimeAccentLine } from "@/components/animations/AnimeAccentLine";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
+import { SectionHeading } from "@/components/animations/SectionHeading";
+import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 
 type FactName = "pin" | "building" | "cap" | "spark";
 
@@ -41,38 +42,31 @@ export function AboutSection() {
       id="about"
       className="relative w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      <div className="w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
-        {/* Section heading：强调线绘制 */}
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-xs font-mono" style={{ color: "var(--accent)" }}>
-            {"// 01"}
-          </span>
-          <AnimeAccentLine />
-          <span
-            className="text-xs uppercase tracking-[0.3em]"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            About
-          </span>
-        </div>
+      <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
+        {/* 巨型幽灵编号装置 */}
+        <SectionGhostNumber index="01" />
+
+        {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
+        <SectionHeading
+          index="01"
+          label="About"
+          title="An independent developer."
+        />
+        <p
+          className="fade-up-soft text-base sm:text-lg font-mono mb-8"
+          style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
+        >
+          coding with love.
+        </p>
 
         {/* 内容网格：左右两列各块作为 data-stagger-item 直接子级交错入场 */}
         <StaggerGroup
           className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start"
-          startDelay={200}
+          startDelay={480}
           staggerMs={110}
         >
           {/* Left: Bio */}
           <div data-stagger-item className="lg:col-span-7 space-y-4">
-            <h2
-              className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight leading-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              An independent developer
-              <br />
-              coding with love.
-            </h2>
-
             <p
               className="text-sm sm:text-base leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
@@ -150,7 +144,7 @@ export function AboutSection() {
                 return (
                   <TiltCard key={fact.label} maxTilt={6} scale={1.04}>
                     <div
-                      className="group relative rounded-xl border p-3 transition-colors duration-500 theme-transition h-full"
+                      className="group relative rounded-xl border p-3 transition-all duration-500 theme-transition h-full active:scale-[0.96]"
                       style={{
                         borderColor: "var(--border-subtle)",
                         background: "var(--surface)",

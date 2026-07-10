@@ -9,9 +9,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { TechCategory } from "@/types";
-import { AnimeAccentLine } from "@/components/animations/AnimeAccentLine";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
+import { SectionHeading } from "@/components/animations/SectionHeading";
+import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 
 const TECH: TechCategory[] = [
   {
@@ -78,48 +79,28 @@ export function TechStackSection() {
       id="tech"
       className="relative w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      <div className="w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
-        {/* Heading：强调线绘制 */}
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-xs font-mono" style={{ color: "var(--accent)" }}>
-            {"// 02"}
-          </span>
-          <AnimeAccentLine />
-          <span
-            className="text-xs uppercase tracking-[0.3em]"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            Tech Stack
-          </span>
-        </div>
+      <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
+        {/* 巨型幽灵编号装置 */}
+        <SectionGhostNumber index="02" />
 
-        {/* 标题块交错入场 */}
-        <StaggerGroup
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-end mb-6"
-          startDelay={200}
-          staggerMs={120}
+        {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
+        <SectionHeading
+          index="02"
+          label="Tech Stack"
+          title="Tools of the trade."
+        />
+        <p
+          className="fade-up-soft text-sm sm:text-base mb-6"
+          style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
         >
-          <h2
-            data-stagger-item
-            className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Tools of the trade.
-          </h2>
-          <p
-            data-stagger-item
-            className="text-sm"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            A pragmatic stack honed across open-source work, side-projects, and
-            the occasional all-nighter.
-          </p>
-        </StaggerGroup>
+          A pragmatic stack honed across open-source work, side-projects, and
+          the occasional all-nighter.
+        </p>
 
         {/* 分类卡片：交错入场 + 3D 倾斜 */}
         <StaggerGroup
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"
-          startDelay={420}
+          startDelay={480}
           staggerMs={90}
           from="center"
         >
@@ -180,7 +161,7 @@ export function TechStackSection() {
                       {cat.items.map((item) => (
                         <li
                           key={item.name}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs transition-colors duration-200 theme-transition"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs transition-all duration-200 theme-transition active:scale-[0.96]"
                           style={{
                             borderColor: "var(--border-subtle)",
                             background: "var(--surface-strong)",

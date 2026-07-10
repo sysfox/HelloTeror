@@ -2,8 +2,10 @@
 
 import { ArrowUpRight, PenLine } from "lucide-react";
 import type { BlogPost } from "@/types";
-import { AnimeAccentLine } from "@/components/animations/AnimeAccentLine";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
+import { MagneticButton } from "@/components/animations/MagneticButton";
+import { SectionHeading } from "@/components/animations/SectionHeading";
+import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { useApiData } from "@/hooks/useApiData";
 
 function BlogListSkeleton() {
@@ -53,50 +55,19 @@ export function BlogSection() {
       id="blog"
       className="relative w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      <div className="w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
-        {/* Heading：强调线绘制 */}
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-xs font-mono" style={{ color: "var(--accent)" }}>
-            {"// 05"}
-          </span>
-          <AnimeAccentLine />
-          <span
-            className="text-xs uppercase tracking-[0.3em]"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            Writing
-          </span>
-        </div>
+      <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
+        {/* 巨型幽灵编号装置 */}
+        <SectionGhostNumber index="05" />
 
-        {/* 标题块交错入场 */}
-        <StaggerGroup
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-end mb-6"
-          startDelay={200}
-          staggerMs={120}
+        {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
+        <SectionHeading index="05" label="Writing" title="Recent writing." />
+        <p
+          className="fade-up-soft text-sm sm:text-base mb-6"
+          style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
         >
-          <div data-stagger-item>
-            <h2
-              className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Recent writing.
-            </h2>
-            <p
-              className="mt-1 text-xs sm:text-sm font-mono"
-              style={{ color: "var(--text-tertiary)" }}
-            >
-              近期笔墨 — A Student &amp;&amp; &lt;Developer /&gt;
-            </p>
-          </div>
-          <p
-            data-stagger-item
-            className="text-sm sm:text-base"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Notes from the field — development logs, security write-ups, and
-            occasional reflections.
-          </p>
-        </StaggerGroup>
+          Notes from the field — development logs, security write-ups, and
+          occasional reflections.
+        </p>
 
         {/* 文章列表：逐项错峰入场（列表行无需 TiltCard，保持轻量）
             注意：data-stagger-item 必须是 StaggerGroup 的「直接子级」，
@@ -107,7 +78,7 @@ export function BlogSection() {
         ) : (
           <StaggerGroup
             className="flex flex-col"
-            startDelay={420}
+            startDelay={480}
             staggerMs={75}
             from="first"
           >
@@ -117,7 +88,7 @@ export function BlogSection() {
                   href={post.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-5 py-3 border-b theme-transition"
+                  className="group grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-5 py-3 min-h-11 border-b theme-transition active:scale-[0.96]"
                   style={{ borderColor: "var(--border-subtle)" }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.borderColor =
@@ -152,6 +123,12 @@ export function BlogSection() {
                     >
                       {post.title}
                     </span>
+                    {/* 绘制下划线：行 hover 时 scaleX 0→1 */}
+                    <span
+                      aria-hidden
+                      className="h-px origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
+                      style={{ background: "var(--accent)" }}
+                    />
                     <span
                       className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs"
                       style={{ color: "var(--text-tertiary)" }}
@@ -163,7 +140,7 @@ export function BlogSection() {
                     </span>
                   </div>
 
-                  {/* Date + arrow */}
+                  {/* Date + magnetic arrow */}
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     <span
                       className="hidden sm:inline text-[10px] sm:text-xs font-mono"
@@ -171,19 +148,20 @@ export function BlogSection() {
                     >
                       {post.date}
                     </span>
-                    <ArrowUpRight
-                      size={14}
-                      className="transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                      style={{ color: "var(--text-tertiary)" }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as unknown as HTMLElement).style.color =
-                          "var(--accent)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as unknown as HTMLElement).style.color =
-                          "var(--text-tertiary)";
-                      }}
-                    />
+                    <MagneticButton strength={0.5} tilt={0} enableTilt={false}>
+                      <ArrowUpRight
+                        size={14}
+                        style={{ color: "var(--text-tertiary)" }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as unknown as HTMLElement).style.color =
+                            "var(--accent)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as unknown as HTMLElement).style.color =
+                            "var(--text-tertiary)";
+                        }}
+                      />
+                    </MagneticButton>
                   </div>
                 </a>
               </div>
@@ -197,7 +175,7 @@ export function BlogSection() {
             href="https://blog.trfox.top"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border theme-transition fade-up-soft"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border theme-transition fade-up-soft active:scale-[0.96]"
             style={{
               borderColor: "var(--border-subtle)",
               background: "var(--surface)",

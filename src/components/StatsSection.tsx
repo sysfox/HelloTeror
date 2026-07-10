@@ -11,9 +11,10 @@ import {
 import { useCountUp } from "@/hooks/useCountUp";
 import { useApiData } from "@/hooks/useApiData";
 import type { GitHubStatsResponse, StatItem } from "@/types";
-import { AnimeAccentLine } from "@/components/animations/AnimeAccentLine";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
+import { SectionHeading } from "@/components/animations/SectionHeading";
+import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 
 function StatCard({
   stat,
@@ -31,7 +32,7 @@ function StatCard({
 
   return (
     <div
-      className="group relative rounded-2xl border p-5 sm:p-6 transition-colors duration-500 theme-transition"
+      className="group relative rounded-2xl border p-5 sm:p-6 transition-all duration-500 theme-transition active:scale-[0.96]"
       style={{
         borderColor: "var(--border-subtle)",
         background: "var(--surface)",
@@ -63,14 +64,14 @@ function StatCard({
       </div>
       <div className="relative flex items-baseline gap-0.5">
         <span
-          className="text-3xl sm:text-4xl font-semibold tracking-tight tabular-nums"
+          className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight tabular-nums"
           style={{ color: "var(--text-primary)" }}
         >
           {value.toLocaleString()}
         </span>
         {stat.suffix && (
           <span
-            className="text-xl sm:text-2xl font-semibold"
+            className="text-2xl sm:text-3xl md:text-4xl font-semibold"
             style={{ color: "var(--accent)" }}
           >
             {stat.suffix}
@@ -169,43 +170,19 @@ export function StatsSection() {
       id="stats"
       className="relative w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      <div className="w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
-        {/* Heading：强调线绘制 */}
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-xs font-mono" style={{ color: "var(--accent)" }}>
-            {"// 03"}
-          </span>
-          <AnimeAccentLine />
-          <span
-            className="text-xs uppercase tracking-[0.3em]"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            Activity
-          </span>
-        </div>
+      <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
+        {/* 巨型幽灵编号装置 */}
+        <SectionGhostNumber index="03" />
 
-        {/* 标题块交错入场 */}
-        <StaggerGroup
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-end mb-6"
-          startDelay={200}
-          staggerMs={120}
+        {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
+        <SectionHeading index="03" label="Activity" title="By the numbers." />
+        <p
+          className="fade-up-soft text-sm sm:text-base mb-6"
+          style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
         >
-          <h2
-            data-stagger-item
-            className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight"
-            style={{ color: "var(--text-primary)" }}
-          >
-            By the numbers.
-          </h2>
-          <p
-            data-stagger-item
-            className="text-sm sm:text-base"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            A year of shipping — measured in commits, pull requests, and the
-            conversations they sparked.
-          </p>
-        </StaggerGroup>
+          A year of shipping — measured in commits, pull requests, and the
+          conversations they sparked.
+        </p>
 
         {/* 数字卡片：交错入场 + 3D 倾斜 + count-up */}
         {loading ? (
@@ -217,7 +194,7 @@ export function StatsSection() {
         ) : (
           <StaggerGroup
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
-            startDelay={420}
+            startDelay={480}
             staggerMs={90}
             from="center"
           >

@@ -2,9 +2,10 @@
 
 import { Star, GitFork, ArrowUpRight, Terminal } from "lucide-react";
 import type { ProjectItem } from "@/types";
-import { AnimeAccentLine } from "@/components/animations/AnimeAccentLine";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
+import { SectionHeading } from "@/components/animations/SectionHeading";
+import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { useApiData } from "@/hooks/useApiData";
 
 function formatNumber(n: number): string {
@@ -69,43 +70,19 @@ export function ProjectsSection() {
       id="projects"
       className="relative w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      <div className="w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
-        {/* Heading：强调线绘制 */}
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-xs font-mono" style={{ color: "var(--accent)" }}>
-            {"// 04"}
-          </span>
-          <AnimeAccentLine />
-          <span
-            className="text-xs uppercase tracking-[0.3em]"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            Projects
-          </span>
-        </div>
+      <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
+        {/* 巨型幽灵编号装置 */}
+        <SectionGhostNumber index="04" />
 
-        {/* 标题块交错入场 */}
-        <StaggerGroup
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-end mb-6"
-          startDelay={200}
-          staggerMs={120}
+        {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
+        <SectionHeading index="04" label="Projects" title="Things I've built." />
+        <p
+          className="fade-up-soft text-sm sm:text-base mb-6"
+          style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
         >
-          <h2
-            data-stagger-item
-            className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Things I&apos;ve built.
-          </h2>
-          <p
-            data-stagger-item
-            className="text-sm sm:text-base"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            A selection of pinned repositories — from a 1.9k-star blog manager
-            to an AI-powered CMS core.
-          </p>
-        </StaggerGroup>
+          A selection of pinned repositories — from a 1.9k-star blog manager
+          to an AI-powered CMS core.
+        </p>
 
         {/* 卡片网格：交错入场 + 3D 倾斜 */}
         {loading ? (
@@ -117,18 +94,22 @@ export function ProjectsSection() {
         ) : (
           <StaggerGroup
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"
-            startDelay={420}
+            startDelay={480}
             staggerMs={90}
             from="center"
           >
-            {projects.map((project) => (
-              <div key={project.id} data-stagger-item>
+            {projects.map((project, i) => (
+              <div
+                key={project.id}
+                data-stagger-item
+                className={i === 0 ? "lg:col-span-2" : ""}
+              >
                 <TiltCard maxTilt={7} scale={1.03}>
                   <a
                     href={project.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group relative flex flex-col h-full rounded-2xl border p-5 transition-colors duration-300 theme-transition"
+                    className="group relative flex flex-col h-full rounded-2xl border p-5 transition-all duration-300 theme-transition active:scale-[0.96]"
                     style={{
                       borderColor: "var(--border-subtle)",
                       background: "var(--surface)",
@@ -165,7 +146,7 @@ export function ProjectsSection() {
                           style={{ color: "var(--text-tertiary)" }}
                         />
                         <span
-                          className="text-[11px] font-mono truncate"
+                          className={`font-mono truncate ${i === 0 ? "text-xs" : "text-[11px]"}`}
                           style={{ color: "var(--text-tertiary)" }}
                         >
                           {project.owner}/
@@ -188,7 +169,7 @@ export function ProjectsSection() {
 
                     {/* Description */}
                     <p
-                      className="relative text-xs sm:text-sm leading-relaxed flex-1 mb-4"
+                      className={`relative leading-relaxed flex-1 mb-4 ${i === 0 ? "text-sm sm:text-base" : "text-xs sm:text-sm"}`}
                       style={{ color: "var(--text-secondary)" }}
                     >
                       {project.description}
@@ -245,7 +226,7 @@ export function ProjectsSection() {
             href="https://github.com/sysfox?tab=repositories"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-xs sm:text-sm transition-colors"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm transition-all active:scale-[0.96]"
             style={{ color: "var(--text-secondary)" }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.color = "var(--accent)";

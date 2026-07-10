@@ -60,7 +60,7 @@ export default function RootLayout({
         trackAttributes={true}
         trackOutgoingLinks={true}
         scriptUrl="https://p.trfox.top/https://openpanel.dev/op1.js"
-        apiUrl="https://op.trfox.top"
+        apiUrl="https://op.trfox.top/api"
       />
       </head>
       <body className="h-full overflow-hidden">

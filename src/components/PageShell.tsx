@@ -27,15 +27,6 @@ const PAGES: Record<PageId, ComponentType> = {
   blog: BlogSection,
 };
 
-const PAGE_LABELS: Record<PageId, string> = {
-  home: "Home",
-  about: "About",
-  tech: "Tech",
-  stats: "Stats",
-  projects: "Projects",
-  blog: "Blog",
-};
-
 /** tiles 网格规格（须与 pageTransitions 的 TILE_GRID 一致：8 列 × 6 行 = 48 格） */
 const TILE_COLS = 8;
 const TILE_ROWS = 6;
@@ -171,65 +162,8 @@ export function PageShell() {
         />
       )}
 
-      <PageIndicator />
       <ScrollHint visible={!transitioning && current === "home"} />
     </div>
-  );
-}
-
-/**
- * 右侧圆点导航：圆点 = 各 section，长条 = 当前。
- * 点击圆点直接跳转到对应 section（受 transitioning 锁保护）。
- */
-function PageIndicator() {
-  const { current, navigate } = usePage();
-  const [locked, setLocked] = useState(false);
-  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!locked) return;
-    const t = window.setTimeout(() => setLocked(false), 700);
-    return () => window.clearTimeout(t);
-  }, [locked, current]);
-
-  return (
-    <nav
-      aria-label="Section navigation"
-      className="side-nav-rail theme-transition"
-      onMouseLeave={() => setHoverIdx(null)}
-    >
-      {PAGE_ORDER.map((id, i) => {
-        const active = current === id;
-        const showLabel = active || hoverIdx === i;
-        return (
-          <button
-            key={id}
-            type="button"
-            className={`page-dot ${active ? "is-active" : ""}`}
-            onClick={() => {
-              if (locked || current === id) return;
-              setLocked(true);
-              navigate(id);
-            }}
-            onMouseEnter={() => setHoverIdx(i)}
-            onFocus={() => setHoverIdx(i)}
-            onBlur={() => setHoverIdx(null)}
-            aria-label={`Go to ${PAGE_LABELS[id]}`}
-            aria-current={active ? "true" : undefined}
-          >
-            <span
-              className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 whitespace-nowrap text-[10px] font-mono uppercase tracking-wider opacity-0 transition-opacity duration-200"
-              style={{
-                color: "var(--text-tertiary)",
-                opacity: showLabel ? 0.9 : 0,
-              }}
-            >
-              {PAGE_LABELS[id]}
-            </span>
-          </button>
-        );
-      })}
-    </nav>
   );
 }
 

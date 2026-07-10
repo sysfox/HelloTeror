@@ -117,6 +117,12 @@
   --header-bg: rgba(0, 0, 0, 0.6);
   --selection-bg: rgba(41, 151, 255, 0.35);
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* 极光光球颜色（dark：黑底上适中透明度，彩色显眼） */
+  --aurora-1: rgba(41, 151, 255, 0.28);
+  --aurora-2: rgba(175, 82, 222, 0.24);
+  --aurora-3: rgba(52, 199, 89, 0.20);
+  --aurora-4: rgba(255, 149, 0, 0.16);
 }
 
 [data-theme="light"] {
@@ -165,6 +171,12 @@
   --header-bg: rgba(245, 245, 247, 0.7);
   --selection-bg: rgba(0, 113, 227, 0.25);
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+  /* 极光光球颜色（light：白底上更高透明度，确保可见） */
+  --aurora-1: rgba(41, 151, 255, 0.50);
+  --aurora-2: rgba(175, 82, 222, 0.45);
+  --aurora-3: rgba(52, 199, 89, 0.40);
+  --aurora-4: rgba(255, 149, 0, 0.35);
 }
 
 /* 向后兼容旧类名 */
@@ -214,6 +226,12 @@
   --header-bg: rgba(245, 245, 247, 0.7);
   --selection-bg: rgba(0, 113, 227, 0.25);
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+  /* 极光光球颜色（light：白底上更高透明度，确保可见） */
+  --aurora-1: rgba(41, 151, 255, 0.50);
+  --aurora-2: rgba(175, 82, 222, 0.45);
+  --aurora-3: rgba(52, 199, 89, 0.40);
+  --aurora-4: rgba(255, 149, 0, 0.35);
 }
 
 @layer base {
@@ -578,6 +596,22 @@
     transition-property: background-color, border-color, color, fill, stroke;
     transition-duration: 300ms;
     transition-timing-function: ease;
+  }
+
+  /* 极光光球主题切换交叉淡入淡出（gradient 无法 transition，用 opacity 缓解突变） */
+  @keyframes aurora-crossfade {
+    0% {
+      opacity: 1;
+    }
+    40% {
+      opacity: 0.15;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  .aurora-crossfade {
+    animation: aurora-crossfade 500ms ease;
   }
 
   /* mask 过渡的强调色"幕布"：用站点主色从一侧扫过屏幕 */

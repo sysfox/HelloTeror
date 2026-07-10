@@ -21,7 +21,9 @@ import {
  *   wrapper(定位 + 视差 x/y) → 内层光球(漂浮 translateX/translateY/scale)
  *
  * 主题安全：纯 DOM + CSS gradient，无 Canvas fillStyle 硬编码。
- * rgba 透明色在 light 模式下自然减弱，无需 MutationObserver。
+ * 光球颜色走 CSS 变量 var(--aurora-N)，light 模式由 globals.css 提高透明度确保可见；
+ * 因 background-image (gradient) 无法 transition，主题切换时用 MutationObserver
+ * 监听 data-theme 变化，给光球加 .aurora-crossfade 触发 opacity 淡出淡入，缓解颜色突变。
  * reduced-motion 静态。
  */
 type OrbConfig = {
@@ -37,7 +39,7 @@ const ORBS: OrbConfig[] = [
   {
     pos: { left: "-8%", top: "-12%" },
     size: 700,
-    bg: "radial-gradient(circle, rgba(41,151,255,0.28), transparent 70%)",
+    bg: "radial-gradient(circle, var(--aurora-1), transparent 70%)",
     blur: 140,
     float: { tx: [-60, 60], ty: [-40, 40], sc: [1, 1.2], dur: 18000 },
     parallax: 16,
@@ -45,7 +47,7 @@ const ORBS: OrbConfig[] = [
   {
     pos: { right: "-6%", top: "8%" },
     size: 600,
-    bg: "radial-gradient(circle, rgba(175,82,222,0.24), transparent 70%)",
+    bg: "radial-gradient(circle, var(--aurora-2), transparent 70%)",
     blur: 130,
     float: { tx: [50, -70], ty: [30, -50], sc: [1.1, 0.9], dur: 22000 },
     parallax: 24,
@@ -53,7 +55,7 @@ const ORBS: OrbConfig[] = [
   {
     pos: { left: "12%", bottom: "-10%" },
     size: 550,
-    bg: "radial-gradient(circle, rgba(52,199,89,0.20), transparent 70%)",
+    bg: "radial-gradient(circle, var(--aurora-3), transparent 70%)",
     blur: 120,
     float: { tx: [-40, 60], ty: [50, -30], sc: [0.95, 1.15], dur: 20000 },
     parallax: 20,
@@ -61,7 +63,7 @@ const ORBS: OrbConfig[] = [
   {
     pos: { right: "18%", bottom: "0%" },
     size: 450,
-    bg: "radial-gradient(circle, rgba(255,149,0,0.16), transparent 70%)",
+    bg: "radial-gradient(circle, var(--aurora-4), transparent 70%)",
     blur: 110,
     float: { tx: [60, -40], ty: [-30, 50], sc: [1.05, 0.95], dur: 25000 },
     parallax: 28,
@@ -131,6 +133,26 @@ export function AuroraBackground({ className = "" }: { className?: string }) {
       };
       window.addEventListener("mousemove", onMove, { passive: true });
       cleanups.push(() => window.removeEventListener("mousemove", onMove));
+    }
+
+    // 主题切换：监听 data-theme 变化，给光球加 .aurora-crossfade 触发 opacity 淡出淡入，
+    // 缓解 gradient 颜色突变（background-image 无法 transition）。
+    const orbElements = orbRefs.current.filter(Boolean) as HTMLDivElement[];
+    if (orbElements.length) {
+      const onThemeChange = () => {
+        orbElements.forEach((el) => {
+          el.classList.remove("aurora-crossfade");
+          // 强制 reflow 以便重新触发 animation
+          void el.offsetWidth;
+          el.classList.add("aurora-crossfade");
+        });
+      };
+      const themeObserver = new MutationObserver(onThemeChange);
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme", "class"],
+      });
+      cleanups.push(() => themeObserver.disconnect());
     }
 
     cleanups.push(() => parallaxAnims.forEach((a) => a.revert()));

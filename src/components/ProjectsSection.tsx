@@ -5,44 +5,7 @@ import type { ProjectItem } from "@/types";
 import { AnimeAccentLine } from "@/components/animations/AnimeAccentLine";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
-
-const PROJECTS: ProjectItem[] = [
-  {
-    id: "qexo",
-    name: "Qexo",
-    owner: "Qexo",
-    description:
-      "A fast, powerful and beautiful online manager for all static blog frameworks.",
-    language: "Python",
-    stars: 1900,
-    forks: 409,
-    url: "https://github.com/Qexo/Qexo",
-    contribution: true,
-  },
-  {
-    id: "mx-core",
-    name: "core",
-    owner: "mx-space",
-    description:
-      "AI-powered CMS core for personal blogs and creator websites, with AI summaries and translation.",
-    language: "TypeScript",
-    stars: 538,
-    forks: 150,
-    url: "https://github.com/mx-space/core",
-    contribution: true,
-  },
-  {
-    id: "koishi-imx",
-    name: "koishi-plugin-imx",
-    owner: "sysfox",
-    description:
-      "Mix-Space Bot for Koishi — 集成多种功能的聊天机器人插件。",
-    language: "TypeScript",
-    stars: 2,
-    forks: 0,
-    url: "https://github.com/sysfox/koishi-plugin-imx",
-  },
-];
+import { useApiData } from "@/hooks/useApiData";
 
 function formatNumber(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
@@ -54,7 +17,53 @@ const LANGUAGE_COLORS: Record<string, string> = {
   TypeScript: "#3178c6",
 };
 
+function ProjectCardSkeleton() {
+  return (
+    <div
+      className="rounded-2xl border p-5"
+      style={{
+        borderColor: "var(--border-subtle)",
+        background: "var(--surface)",
+      }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <span
+          className="h-3 w-28 rounded animate-pulse"
+          style={{ background: "var(--surface-strong)" }}
+        />
+        <span
+          className="h-3 w-3 rounded animate-pulse"
+          style={{ background: "var(--surface-strong)" }}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5 mb-4">
+        <span
+          className="h-3 w-full rounded animate-pulse"
+          style={{ background: "var(--surface-strong)" }}
+        />
+        <span
+          className="h-3 w-2/3 rounded animate-pulse"
+          style={{ background: "var(--surface-strong)" }}
+        />
+      </div>
+      <div className="flex items-center gap-3">
+        <span
+          className="h-2.5 w-16 rounded animate-pulse"
+          style={{ background: "var(--surface-strong)" }}
+        />
+        <span
+          className="h-2.5 w-10 rounded animate-pulse"
+          style={{ background: "var(--surface-strong)" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ProjectsSection() {
+  const { data, loading } = useApiData<ProjectItem[]>("/api/github/projects");
+  const projects = data ?? [];
+
   return (
     <section
       id="projects"
@@ -99,125 +108,133 @@ export function ProjectsSection() {
         </StaggerGroup>
 
         {/* 卡片网格：交错入场 + 3D 倾斜 */}
-        <StaggerGroup
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"
-          startDelay={420}
-          staggerMs={90}
-          from="center"
-        >
-          {PROJECTS.map((project) => (
-            <div key={project.id} data-stagger-item>
-              <TiltCard maxTilt={7} scale={1.03}>
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative flex flex-col h-full rounded-2xl border p-5 transition-colors duration-300 theme-transition"
-                  style={{
-                    borderColor: "var(--border-subtle)",
-                    background: "var(--surface)",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.borderColor =
-                      "var(--accent-border)";
-                    (e.currentTarget as HTMLElement).style.background =
-                      "var(--accent-soft)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.borderColor =
-                      "var(--border-subtle)";
-                    (e.currentTarget as HTMLElement).style.background =
-                      "var(--surface)";
-                  }}
-                >
-                  {/* Hover glow */}
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <ProjectCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <StaggerGroup
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"
+            startDelay={420}
+            staggerMs={90}
+            from="center"
+          >
+            {projects.map((project) => (
+              <div key={project.id} data-stagger-item>
+                <TiltCard maxTilt={7} scale={1.03}>
+                  <a
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative flex flex-col h-full rounded-2xl border p-5 transition-colors duration-300 theme-transition"
                     style={{
-                      background:
-                        "radial-gradient(circle at 50% 0%, var(--accent-soft), transparent 70%)",
+                      borderColor: "var(--border-subtle)",
+                      background: "var(--surface)",
                     }}
-                  />
-
-                  {/* Header: owner/name + arrow */}
-                  <div className="relative flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <Terminal
-                        size={12}
-                        className="shrink-0"
-                        style={{ color: "var(--text-tertiary)" }}
-                      />
-                      <span
-                        className="text-[11px] font-mono truncate"
-                        style={{ color: "var(--text-tertiary)" }}
-                      >
-                        {project.owner}/
-                        <span
-                          style={{
-                            color: "var(--text-primary)",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {project.name}
-                        </span>
-                      </span>
-                    </div>
-                    <ArrowUpRight
-                      size={14}
-                      className="shrink-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                      style={{ color: "var(--text-tertiary)" }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor =
+                        "var(--accent-border)";
+                      (e.currentTarget as HTMLElement).style.background =
+                        "var(--accent-soft)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor =
+                        "var(--border-subtle)";
+                      (e.currentTarget as HTMLElement).style.background =
+                        "var(--surface)";
+                    }}
+                  >
+                    {/* Hover glow */}
+                    <div
+                      aria-hidden
+                      className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                      style={{
+                        background:
+                          "radial-gradient(circle at 50% 0%, var(--accent-soft), transparent 70%)",
+                      }}
                     />
-                  </div>
 
-                  {/* Description */}
-                  <p
-                    className="relative text-xs sm:text-sm leading-relaxed flex-1 mb-4"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {project.description}
-                  </p>
-
-                  {/* Footer: language + stars + forks */}
-                  <div
-                    className="relative flex items-center gap-3 text-[11px]"
-                    style={{ color: "var(--text-tertiary)" }}
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{
-                          background:
-                            LANGUAGE_COLORS[project.language] ??
-                            "var(--text-tertiary)",
-                        }}
+                    {/* Header: owner/name + arrow */}
+                    <div className="relative flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Terminal
+                          size={12}
+                          className="shrink-0"
+                          style={{ color: "var(--text-tertiary)" }}
+                        />
+                        <span
+                          className="text-[11px] font-mono truncate"
+                          style={{ color: "var(--text-tertiary)" }}
+                        >
+                          {project.owner}/
+                          <span
+                            style={{
+                              color: "var(--text-primary)",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {project.name}
+                          </span>
+                        </span>
+                      </div>
+                      <ArrowUpRight
+                        size={14}
+                        className="shrink-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        style={{ color: "var(--text-tertiary)" }}
                       />
-                      {project.language}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Star size={11} />
-                      {formatNumber(project.stars)}
-                    </span>
-                    {project.forks > 0 && (
+                    </div>
+
+                    {/* Description */}
+                    <p
+                      className="relative text-xs sm:text-sm leading-relaxed flex-1 mb-4"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {project.description}
+                    </p>
+
+                    {/* Footer: language + stars + forks */}
+                    <div
+                      className="relative flex items-center gap-3 text-[11px]"
+                      style={{ color: "var(--text-tertiary)" }}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{
+                            background:
+                              LANGUAGE_COLORS[project.language] ??
+                              "var(--text-tertiary)",
+                          }}
+                        />
+                        {project.language}
+                      </span>
                       <span className="inline-flex items-center gap-1">
-                        <GitFork size={11} />
-                        {project.forks}
+                        <Star size={11} />
+                        {formatNumber(project.stars)}
                       </span>
-                    )}
-                    {project.contribution && (
-                      <span
-                        className="ml-auto text-[9px] font-mono"
-                        style={{ color: "var(--accent)" }}
-                      >
-                        contributor
-                      </span>
-                    )}
-                  </div>
-                </a>
-              </TiltCard>
-            </div>
-          ))}
-        </StaggerGroup>
+                      {project.forks > 0 && (
+                        <span className="inline-flex items-center gap-1">
+                          <GitFork size={11} />
+                          {project.forks}
+                        </span>
+                      )}
+                      {project.contribution && (
+                        <span
+                          className="ml-auto text-[9px] font-mono"
+                          style={{ color: "var(--accent)" }}
+                        >
+                          contributor
+                        </span>
+                      )}
+                    </div>
+                  </a>
+                </TiltCard>
+              </div>
+            ))}
+          </StaggerGroup>
+        )}
 
         {/* See more */}
         <div
@@ -238,7 +255,7 @@ export function ProjectsSection() {
                 "var(--text-secondary)";
             }}
           >
-            See all 98 repositories on GitHub
+            See all on GitHub
             <ArrowUpRight size={13} />
           </a>
         </div>

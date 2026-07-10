@@ -52,3 +52,25 @@ export interface SocialLink {
   /** Icon key, see components/icons.tsx */
   icon: string;
 }
+
+/**
+ * Raw GitHub stats from the `/api/github/stats` route.
+ * Icons / labels are mapped client-side in StatsSection by id;
+ * the API only returns the numeric values.
+ */
+export interface GitHubStatsResponse {
+  /** Commits this year (contributionsCollection.totalCommitContributions) */
+  commits: number;
+  /** Pull requests (totalPullRequestContributions) */
+  prs: number;
+  /** Issues opened (totalIssueContributions) */
+  issues: number;
+  /** Contributed-to repos (totalRepositoryContributions, approximate) */
+  contributedTo: number;
+  /** Public repositories (user.repositories.totalCount) */
+  repos: number;
+  /** GitHub followers (user.followers.totalCount) */
+  followers: number;
+  /** Stars earned across own repos (sum of stargazers_count) */
+  stars: number;
+}

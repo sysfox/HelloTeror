@@ -9,47 +9,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useCountUp } from "@/hooks/useCountUp";
-import type { StatItem } from "@/types";
+import { useApiData } from "@/hooks/useApiData";
+import type { GitHubStatsResponse, StatItem } from "@/types";
 import { AnimeAccentLine } from "@/components/animations/AnimeAccentLine";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
-
-const STATS: (StatItem & { icon: LucideIcon })[] = [
-  {
-    id: "commits",
-    label: "Commits this year",
-    value: 1886,
-    suffix: "+",
-    icon: GitCommitHorizontal,
-  },
-  {
-    id: "prs",
-    label: "Pull requests",
-    value: 82,
-    suffix: "",
-    icon: GitPullRequest,
-  },
-  {
-    id: "issues",
-    label: "Issues opened",
-    value: 84,
-    suffix: "",
-    icon: CircleDot,
-  },
-  {
-    id: "contrib",
-    label: "Contributed to",
-    value: 32,
-    suffix: "",
-    icon: Users,
-  },
-];
-
-const EXTRA_STATS = [
-  { id: "repos", label: "Public repositories", value: 98 },
-  { id: "followers", label: "GitHub followers", value: 71 },
-  { id: "stars", label: "Stars earned", value: 12 },
-] as const;
 
 function StatCard({
   stat,
@@ -123,17 +87,82 @@ function StatCard({
   );
 }
 
+function StatCardSkeleton() {
+  return (
+    <div
+      className="rounded-2xl border p-5 sm:p-6"
+      style={{
+        borderColor: "var(--border-subtle)",
+        background: "var(--surface)",
+      }}
+    >
+      <span
+        className="block h-[18px] w-[18px] rounded mb-3 animate-pulse"
+        style={{ background: "var(--surface-strong)" }}
+      />
+      <span
+        className="block h-8 w-20 rounded mb-2 animate-pulse"
+        style={{ background: "var(--surface-strong)" }}
+      />
+      <span
+        className="block h-3 w-24 rounded animate-pulse"
+        style={{ background: "var(--surface-strong)" }}
+      />
+    </div>
+  );
+}
+
 export function StatsSection() {
-  // 在 mount 时立即触发一次 count-up，后续每次进入页面都会重新触发
+  const { data, loading } = useApiData<GitHubStatsResponse>("/api/github/stats");
+
+  // count-up 触发：仅在数据就绪后启动，避免空数据触发动画
   const startRef = useRef(false);
   const [start, setStart] = useState(false);
 
   useEffect(() => {
     if (startRef.current) return;
+    if (loading || !data) return;
     startRef.current = true;
     const t = window.setTimeout(() => setStart(true), 80);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [loading, data]);
+
+  const STATS: (StatItem & { icon: LucideIcon })[] = [
+    {
+      id: "commits",
+      label: "Commits this year",
+      value: data?.commits ?? 0,
+      suffix: "+",
+      icon: GitCommitHorizontal,
+    },
+    {
+      id: "prs",
+      label: "Pull requests",
+      value: data?.prs ?? 0,
+      suffix: "",
+      icon: GitPullRequest,
+    },
+    {
+      id: "issues",
+      label: "Issues opened",
+      value: data?.issues ?? 0,
+      suffix: "",
+      icon: CircleDot,
+    },
+    {
+      id: "contrib",
+      label: "Contributed to",
+      value: data?.contributedTo ?? 0,
+      suffix: "",
+      icon: Users,
+    },
+  ];
+
+  const EXTRA_STATS = [
+    { id: "repos", label: "Public repositories", value: data?.repos ?? 0 },
+    { id: "followers", label: "GitHub followers", value: data?.followers ?? 0 },
+    { id: "stars", label: "Stars earned", value: data?.stars ?? 0 },
+  ];
 
   return (
     <section
@@ -179,53 +208,73 @@ export function StatsSection() {
         </StaggerGroup>
 
         {/* 数字卡片：交错入场 + 3D 倾斜 + count-up */}
-        <StaggerGroup
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
-          startDelay={420}
-          staggerMs={90}
-          from="center"
-        >
-          {STATS.map((stat) => (
-            <div key={stat.id} data-stagger-item>
-              <TiltCard maxTilt={6} scale={1.03}>
-                <StatCard stat={stat} start={start} />
-              </TiltCard>
-            </div>
-          ))}
-        </StaggerGroup>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <StatCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <StaggerGroup
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"
+            startDelay={420}
+            staggerMs={90}
+            from="center"
+          >
+            {STATS.map((stat) => (
+              <div key={stat.id} data-stagger-item>
+                <TiltCard maxTilt={6} scale={1.03}>
+                  <StatCard stat={stat} start={start} />
+                </TiltCard>
+              </div>
+            ))}
+          </StaggerGroup>
+        )}
 
         {/* Extra inline stats */}
-        <div
-          className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs sm:text-sm fade-up-soft"
-          style={{ animationDelay: "0.85s", color: "var(--text-tertiary)" }}
-        >
-          {EXTRA_STATS.map((s) => (
-            <span key={s.id} className="inline-flex items-center gap-2">
+        {loading ? (
+          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
               <span
-                className="font-mono"
-                style={{ color: "var(--text-primary)" }}
-              >
-                {s.value}
-              </span>
-              <span>{s.label}</span>
-            </span>
-          ))}
-          <a
-            href="https://github.com/sysfox"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto transition-colors"
-            style={{ color: "var(--accent)" }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.color = "var(--accent)";
-            }}
+                key={i}
+                className="h-3 w-28 rounded animate-pulse"
+                style={{ background: "var(--surface-strong)" }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs sm:text-sm fade-up-soft"
+            style={{ animationDelay: "0.85s", color: "var(--text-tertiary)" }}
           >
-            View GitHub profile →
-          </a>
-        </div>
+            {EXTRA_STATS.map((s) => (
+              <span key={s.id} className="inline-flex items-center gap-2">
+                <span
+                  className="font-mono"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {s.value}
+                </span>
+                <span>{s.label}</span>
+              </span>
+            ))}
+            <a
+              href="https://github.com/sysfox"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto transition-colors"
+              style={{ color: "var(--accent)" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "var(--accent)";
+              }}
+            >
+              View GitHub profile →
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );

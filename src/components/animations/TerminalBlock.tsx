@@ -17,7 +17,7 @@ import { prefersReducedMotion } from "@/lib/anime";
 type Line = { prompt: string; output: string };
 
 const LINES: Line[] = [
-  { prompt: "whoami", output: "teror-fox" },
+  { prompt: "whoami", output: "Teror Fox" },
   { prompt: "cat role.txt", output: "Student && Developer" },
 ];
 

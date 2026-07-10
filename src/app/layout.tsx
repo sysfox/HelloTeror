@@ -3,6 +3,7 @@ import "./globals.css";
 import { KineticLoader } from "@/components/animations/KineticLoader";
 import { EnhancedCursor } from "@/components/animations/EnhancedCursor";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { OpenPanelComponent } from '@openpanel/nextjs';
 
 export const metadata: Metadata = {
   title: "Teror Fox — Fighting for the AI age",
@@ -53,6 +54,13 @@ export default function RootLayout({
     <html lang="zh-CN" className="h-full antialiased" data-theme="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+        <OpenPanelComponent
+        clientId="1df61cd0-b9ac-4be9-91e0-5200452771e5"
+        trackScreenViews={true}
+        trackAttributes={true}
+        trackOutgoingLinks={true}
+        apiUrl="https://op.trfox.top"
+      />
       </head>
       <body className="h-full overflow-hidden">
         <ThemeProvider>

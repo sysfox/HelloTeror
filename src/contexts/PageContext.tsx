@@ -18,19 +18,17 @@ export type PageId =
   | "blog";
 
 /**
- * 四种 anime.js 驱动的切换动画（kinetic-tech 风格）：
- *  - tiles      瓦片网格翻面覆盖→揭示（两段式，最有冲击力）
+ * 两种 anime.js 驱动的切换动画（kinetic-tech 风格）：
  *  - curtain    强调色幕布横扫覆盖→揭示（两段式，融合站点主色）
  *  - zoom-blur  缩放+模糊交叉淡入淡出（一段式，电影感）
- *  - crt        CRT 电源周期：旧页塌成发丝亮线 → 信号锁定雪噪 → 新页从亮线展开（方向无关，signature）
  *
  * forward / backward 方向由 navigate 时按 PAGE_ORDER 索引判定，
- * 影响 tiles/curtain 的覆盖方向（crt 开关机不区分方向）。
+ * 影响 curtain 的覆盖方向。
  */
-export type TransitionType = "tiles" | "curtain" | "zoom-blur" | "crt";
+export type TransitionType = "curtain" | "zoom-blur";
 
 /**
- * 页面顺序常量（用于判断 forward / backward 方向以决定 tiles/curtain 方向）
+ * 页面顺序常量（用于判断 forward / backward 方向以决定 curtain 方向）
  */
 export const PAGE_ORDER: PageId[] = [
   "home",
@@ -42,15 +40,10 @@ export const PAGE_ORDER: PageId[] = [
 ];
 
 /**
- * 循环序列：覆盖 4 种动画，确保连续切换不会过于单调。
- * tiles 作为视觉强点放首位，crt 作为 signature 放末位（1/4 频率，足够惊艳不致廉价）。
+ * 循环序列：两种动画交替，避免连续切换单调。
+ * curtain 横扫与 zoom-blur 缩放模糊节奏对比，频率各 1/2。
  */
-const TRANSITION_CYCLE: TransitionType[] = [
-  "tiles",
-  "curtain",
-  "zoom-blur",
-  "crt",
-];
+const TRANSITION_CYCLE: TransitionType[] = ["curtain", "zoom-blur"];
 
 interface PageContextValue {
   current: PageId;

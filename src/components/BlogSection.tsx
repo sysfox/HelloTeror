@@ -53,12 +53,12 @@ export function BlogSection() {
   return (
     <section
       id="blog"
-      className="relative w-full h-full flex items-center justify-center px-5 sm:px-6"
+      className="relative isolate w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
-        {/* 巨型幽灵编号装置 */}
-        <SectionGhostNumber index="05" />
+      {/* 巨型幽灵编号装置（scaffold 锚定 section 顶部 + 内容列右沿，跨页同位） */}
+      <SectionGhostNumber index="05" />
 
+      <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
         {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
         <SectionHeading index="05" label="Writing" title="Recent writing." />
         <p

@@ -12,8 +12,12 @@ import { createTimeline, EASE, prefersReducedMotion } from "@/lib/anime";
  *（opacity 0→0.14→0.035）+ rack 进焦点（scale 1.6→1）+ 焦点拉准
  *（blur 48px→0）。编号像信号「显影」后沉回幽灵态，每次切页重播。
  *
+ * 位置一致性：本组件自带 scaffold（absolute inset-0 -z-10 + 与 section 同款
+ * px-5 sm:px-6 + 内层 max-w-5xl mx-auto h-full），把编号锚定到 section 顶部
+ * 与内容列右沿——无论各页内容高低，编号都落在同一坐标。需作为 section 直接
+ * 子级渲染，且 section 加 `isolate` 创建 stacking context 容纳 -z-10。
+ *
  * - pointer-events-none / select-none：不挡交互、不可选中
- * - -z-10：沉到内容之下；配合 section 内层容器 `relative isolate` 限定层级
  * - tabular-nums：编号等宽对齐
  * - transformOrigin 100% 0%：锚定右上角，scale 缩放向左下，避免外溢
  * - FOUC：初始 inline opacity:0 + clipPath 收起，anime.js 抬升；
@@ -92,19 +96,25 @@ export function SectionGhostNumber({
   }, [delay]);
 
   return (
-    <span
-      ref={ref}
+    <div
       aria-hidden
-      className={`pointer-events-none select-none absolute top-0 right-0 -z-10 font-semibold tabular-nums leading-none text-[clamp(10rem,30vw,22rem)] ${className}`}
-      style={{
-        color: "var(--text-primary)",
-        transformOrigin: "100% 0%",
-        ...style,
-        opacity: 0,
-        clipPath: "inset(0 0 100% 0)",
-      }}
+      className="pointer-events-none select-none absolute inset-0 -z-10 px-5 sm:px-6"
     >
-      {index}
-    </span>
+      <div className="relative w-full max-w-5xl mx-auto h-full">
+        <span
+          ref={ref}
+          className={`absolute top-0 right-0 font-semibold tabular-nums leading-none text-[clamp(10rem,30vw,22rem)] ${className}`}
+          style={{
+            color: "var(--text-primary)",
+            transformOrigin: "100% 0%",
+            ...style,
+            opacity: 0,
+            clipPath: "inset(0 0 100% 0)",
+          }}
+        >
+          {index}
+        </span>
+      </div>
+    </div>
   );
 }

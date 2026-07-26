@@ -13,6 +13,7 @@
  */
 import {
   createTimeline,
+  stagger,
   EASE,
   TRANSITION_MS,
   prefersReducedMotion,
@@ -31,7 +32,15 @@ export const TRANSITION_DURATIONS: Record<TransitionType, number> = {
   "zoom-blur": TRANSITION_MS,
   // 词标需要足够时间被读到，比基准时长长一截
   "type-wipe": 780,
+  // 百叶窗要留出 stagger 铺开的余量，见 SLAT_COUNT / SLAT_STEP
+  slats: 820,
 };
+
+/** 百叶窗竖条数量（PageShell 渲染 DOM 用同一常量，避免两处不一致） */
+export const SLAT_COUNT = 10;
+
+/** 相邻竖条的错峰步长（ms） */
+const SLAT_STEP = 22;
 
 /**
  * 最长切换时长：滚动冷却（useFullPageScroll.cooldownMs）按它取，
@@ -50,6 +59,8 @@ export interface TransitionContext {
   curtainPanel: HTMLElement | null;
   /** 幕布上的超大词标（仅 type-wipe 需要），DOM 上是 curtainPanel 的子级 */
   curtainLabel: HTMLElement | null;
+  /** 百叶窗容器（仅 slats 需要），内部竖条以 [data-slat] 标记 */
+  slatsContainer: HTMLElement | null;
   /** 过渡完成回调：切换 displayed → pending，解锁滚动 */
   finish: () => void;
 }
@@ -72,7 +83,8 @@ export function runTransition(
     return;
   }
 
-  const { exitEl, enterEl, curtainPanel, curtainLabel, finish } = ctx;
+  const { exitEl, enterEl, curtainPanel, curtainLabel, slatsContainer, finish } =
+    ctx;
 
   /** 本次切换的总时长与分段点（两段式动画在 HALF 处交接） */
   const TOTAL = TRANSITION_DURATIONS[type];
@@ -234,6 +246,63 @@ export function runTransition(
             duration: HALF,
             ease: EASE.quart,
           },
+          HALF
+        );
+      }
+      break;
+    }
+
+    case "slats": {
+      // 百叶窗：竖条按 stagger 依次划过。前半段逐条覆盖，后半段沿**同一方向**
+      // 继续划出（而非退回），整体读作一次贯穿屏幕的波，而不是来回抽动。
+      const slats = slatsContainer
+        ? Array.from(slatsContainer.querySelectorAll<HTMLElement>("[data-slat]"))
+        : [];
+
+      // 单条时长 = 半段时长 - stagger 铺开的总跨度，保证最后一条也在半段内落位，
+      // 否则它会与后半段的动画抢同一个 translateY。
+      const spread = (SLAT_COUNT - 1) * SLAT_STEP;
+      const slatDuration = Math.max(160, HALF - spread);
+      const from = forward ? "first" : "last";
+
+      // ── 前半段：旧页淡出 + 竖条逐条覆盖 ──
+      if (exitEl) {
+        tl.add(
+          exitEl,
+          { opacity: [1, 0], duration: HALF, ease: EASE.quart },
+          0
+        );
+      }
+      if (slats.length) {
+        tl.add(
+          slats,
+          {
+            translateY: [forward ? "-100%" : "100%", "0%"],
+            delay: stagger(SLAT_STEP, { from }),
+            duration: slatDuration,
+            ease: EASE.expo,
+          },
+          0
+        );
+      }
+
+      // ── 后半段：竖条继续同向划出 + 新页淡入 ──
+      if (slats.length) {
+        tl.add(
+          slats,
+          {
+            translateY: ["0%", forward ? "100%" : "-100%"],
+            delay: stagger(SLAT_STEP, { from }),
+            duration: slatDuration,
+            ease: "inExpo",
+          },
+          HALF
+        );
+      }
+      if (enterEl) {
+        tl.add(
+          enterEl,
+          { opacity: [0, 1], duration: HALF, ease: EASE.quart },
           HALF
         );
       }

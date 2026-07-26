@@ -15,6 +15,7 @@ import {
   clearTransitionStyles,
   TRANSITION_DURATIONS,
   MAX_TRANSITION_MS,
+  SLAT_COUNT,
 } from "@/lib/pageTransitions";
 import { HeroSection } from "@/components/HeroSection";
 import { AboutSection } from "@/components/AboutSection";
@@ -59,6 +60,7 @@ export function PageShell() {
   const enterRef = useRef<HTMLDivElement>(null);
   const curtainRef = useRef<HTMLDivElement>(null);
   const curtainLabelRef = useRef<HTMLSpanElement>(null);
+  const slatsRef = useRef<HTMLDivElement>(null);
 
   // current 变化 → 锁定 + 记录 pending（让两层同时渲染）
   useEffect(() => {
@@ -90,6 +92,7 @@ export function PageShell() {
       enterEl: enterRef.current,
       curtainPanel: curtainRef.current,
       curtainLabel: curtainLabelRef.current,
+      slatsContainer: slatsRef.current,
       finish,
     });
 
@@ -126,6 +129,7 @@ export function PageShell() {
   // 幕布类切换共用同一块面板 DOM；type-wipe 在面板内额外挂一个超大词标
   const showCurtain =
     pending !== null && (transition === "curtain" || transition === "type-wipe");
+  const showSlats = pending !== null && transition === "slats";
   const ActivePage = PAGES[pending ?? displayed];
   const ExitingPage = pending !== null ? PAGES[displayed] : null;
 
@@ -171,6 +175,20 @@ export function PageShell() {
               {t.wordmark[pending]}
             </span>
           )}
+        </div>
+      )}
+
+      {/* 百叶窗面板：竖条逐条覆盖 → 逐条划出 */}
+      {showSlats && (
+        <div
+          key={`slats-${displayed}-to-${pending}`}
+          ref={slatsRef}
+          className="slats-overlay"
+          aria-hidden
+        >
+          {Array.from({ length: SLAT_COUNT }).map((_, i) => (
+            <span key={i} data-slat className="slat-cell" />
+          ))}
         </div>
       )}
 

@@ -746,6 +746,28 @@
   opacity: 0;
   will-change: transform, opacity;
 }
+/* slats 百叶窗叠加层：等宽竖条铺满整屏，各条独立 translateY */
+.slats-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  pointer-events: none;
+}
+/* 单条竖条。initial translateY(-100%) 是防 FOUC 的屏外初始态
+  （backward 方向 anime 首帧即改写为 +100%，两种方向下都在屏外，不会闪）。
+   刻意**不**加入底部 prefers-reduced-motion 白名单：那里会置 transform:none，
+   反而把竖条摆到屏幕正中盖住整页。
+   背景复用 --transition-curtain-bg：横向渐变在每条内各压缩一遍，
+   天然形成条带明暗节奏；inset 描边进一步分隔相邻条。 */
+.slat-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  transform: translateY(-100%);
+  will-change: transform;
+  background: var(--transition-curtain-bg);
+  box-shadow: inset 1px 0 0 var(--accent-border);
+}
 /* MagneticButton / TiltCard 3D 上下文 */
 .preserve-3d {
   transform-style: preserve-3d;

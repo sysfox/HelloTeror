@@ -22,6 +22,7 @@ export type PageId =
  *  - curtain    强调色幕布横扫覆盖→揭示（两段式，融合站点主色）
  *  - zoom-blur  缩放+模糊交叉淡入淡出（一段式，电影感）
  *  - type-wipe  幕布上印目标页超大词标，与幕布反向视差掠过（两段式，拍板感）
+ *  - slats      竖条百叶窗逐条覆盖再逐条揭开（两段式，机械感）
  *
  * forward / backward 方向由 navigate 时按 PAGE_ORDER 索引判定，
  * 影响幕布类切换的覆盖方向。
@@ -30,7 +31,7 @@ export type PageId =
  * pageTransitions.ts 的 TRANSITION_DURATIONS（Record 完备性会强制）与 runTransition，
  * 以及 PageShell 里对应的 overlay DOM。
  */
-export type TransitionType = "curtain" | "zoom-blur" | "type-wipe";
+export type TransitionType = "curtain" | "zoom-blur" | "type-wipe" | "slats";
 
 /**
  * 页面顺序常量（用于判断 forward / backward 方向以决定 curtain 方向）
@@ -48,7 +49,12 @@ export const PAGE_ORDER: PageId[] = [
  * 循环序列：按顺序轮换，避免连续切换单调。
  * 排列上让"幕布类"与"非幕布类"交替出现，节奏对比更明显。
  */
-const TRANSITION_CYCLE: TransitionType[] = ["curtain", "zoom-blur", "type-wipe"];
+const TRANSITION_CYCLE: TransitionType[] = [
+  "curtain",
+  "zoom-blur",
+  "type-wipe",
+  "slats",
+];
 
 interface PageContextValue {
   current: PageId;

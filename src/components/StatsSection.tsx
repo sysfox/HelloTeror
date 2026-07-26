@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   GitCommitHorizontal,
   GitPullRequest,
@@ -143,17 +143,22 @@ export function StatsSection() {
   const { t, intlLocale } = useLocale();
   const { data, loading } = useApiData<GitHubStatsResponse>("/api/github/stats");
 
-  // count-up 触发：仅在数据就绪后启动，避免空数据触发动画
-  const startRef = useRef(false);
+  // count-up / 热图波浪的触发：仅在数据就绪后启动，避免空数据触发动画。
+  //
+  // 守卫条件用 start 这个 state 而**不是** ref：旧版用 startRef 会在 React
+  // strict-mode 双挂载下永久卡死 —— 第一趟 effect 置位 ref 并挂定时器，
+  // 它的 cleanup 清掉定时器，第二趟 effect 因 ref 已置位而提前返回，
+  // 于是再没有人去 setStart(true)，数字永远停在 0、热图永远不显形。
+  // 该路径只在挂载首帧就命中 useApiData 缓存时出现（重复访问本页 / 切换语言重挂载）。
+  // 用 state 作守卫后，第二趟 effect 会重新挂上定时器；start 一旦为真便不再重播。
   const [start, setStart] = useState(false);
 
   useEffect(() => {
-    if (startRef.current) return;
+    if (start) return;
     if (loading || !data) return;
-    startRef.current = true;
     const t = window.setTimeout(() => setStart(true), 80);
     return () => window.clearTimeout(t);
-  }, [loading, data]);
+  }, [loading, data, start]);
 
   const STATS: (StatItem & { icon: LucideIcon })[] = [
     {

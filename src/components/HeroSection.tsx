@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { usePage } from "@/contexts/PageContext";
+import { useT } from "@/contexts/LocaleContext";
 import { AuroraBackground } from "@/components/animations/AuroraBackground";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { MagneticButton } from "@/components/animations/MagneticButton";
@@ -20,7 +21,6 @@ import { TerminalBlock } from "@/components/animations/TerminalBlock";
 import { SITE_LINKS } from "@/config/site";
 
 const AVATAR = "https://avatars.githubusercontent.com/u/99103591?v=4";
-const SKILLS = ["TypeScript", "Next.js", "anime.js", "Python", "Rust", "React"];
 
 /** KineticLoader 完成时写入的 sessionStorage key，用于时序同步 */
 const LOADER_KEY = "teror-fox-loader-played";
@@ -49,6 +49,7 @@ function SiteLinkIcon({ id }: { id: string }) {
  */
 export function HeroSection() {
   const { navigate } = usePage();
+  const t = useT();
   const [ready, setReady] = useState(false);
   const [startDelay, setStartDelay] = useState(1900);
 
@@ -123,7 +124,7 @@ export function HeroSection() {
                 style={{ color: "var(--text-tertiary)" }}
               >
                 <span className="status-pulse w-1.5 h-1.5 rounded-full bg-[#28c840]" />
-                online
+                {t.common.online}
               </span>
               <span
                 className="w-px h-3"
@@ -166,15 +167,17 @@ export function HeroSection() {
                 data-stagger-item
                 style={{ color: "var(--text-primary)", textWrap: "balance" }}
               >
-                Fighting for the AI age
+                {t.hero.tagline}
               </p>
               <p
                 className="mt-2 text-sm sm:text-base font-mono"
                 data-stagger-item
                 style={{ color: "var(--text-tertiary)" }}
               >
-                Student &amp;&amp;{" "}
-                <span style={{ color: "var(--accent)" }}>&lt;Developer /&gt;</span>
+                {t.hero.roleStudent} &amp;&amp;{" "}
+                <span style={{ color: "var(--accent)" }}>
+                  {t.hero.roleDeveloper}
+                </span>
               </p>
 
               {/* bio 段落：平衡双栏视觉 */}
@@ -183,9 +186,7 @@ export function HeroSection() {
                 data-stagger-item
                 style={{ color: "var(--text-secondary)", textWrap: "balance" }}
               >
-                Crafting expressive, performant interfaces for the AI age.
-                Student by day, developer by night — exploring systems, design,
-                and everything between.
+                {t.hero.bio}
               </p>
 
               {/* CTAs：磁吸 + 描边矩形 + scale on press */}
@@ -203,7 +204,7 @@ export function HeroSection() {
                       boxShadow: "0 0 24px var(--accent-glow)",
                     }}
                   >
-                    View Projects
+                    {t.hero.ctaProjects}
                     <ArrowUpRight
                       size={14}
                       className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
@@ -222,7 +223,7 @@ export function HeroSection() {
                       color: "var(--text-primary)",
                     }}
                   >
-                    Read Blog
+                    {t.hero.ctaBlog}
                   </button>
                 </MagneticButton>
 
@@ -235,7 +236,7 @@ export function HeroSection() {
                       background: "var(--surface)",
                       color: "var(--text-primary)",
                     }}
-                    aria-label="Email Teror Fox"
+                    aria-label={t.a11y.emailMe}
                   >
                     <Mail size={16} />
                   </a>
@@ -261,7 +262,7 @@ export function HeroSection() {
                     }}
                   >
                     <SiteLinkIcon id={link.id} />
-                    {link.label}
+                    {t.links[link.id]}
                   </a>
                 ))}
               </div>

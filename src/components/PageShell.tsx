@@ -8,6 +8,7 @@ import {
   type ComponentType,
 } from "react";
 import { usePage, PAGE_ORDER, type PageId } from "@/contexts/PageContext";
+import { useT } from "@/contexts/LocaleContext";
 import { useFullPageScroll } from "@/hooks/useFullPageScroll";
 import { runTransition, clearTransitionStyles } from "@/lib/pageTransitions";
 import { TRANSITION_MS } from "@/lib/anime";
@@ -150,6 +151,7 @@ export function PageShell() {
  * 仅在首页且未在动画中显示。
  */
 function ScrollHint({ visible }: { visible: boolean }) {
+  const t = useT();
   if (!visible) return null;
   return (
     <div
@@ -161,7 +163,7 @@ function ScrollHint({ visible }: { visible: boolean }) {
       }}
     >
       <span className="text-[10px] font-mono uppercase tracking-[0.3em]">
-        scroll
+        {t.common.scroll}
       </span>
       <svg
         width="14"

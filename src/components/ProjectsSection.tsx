@@ -7,6 +7,7 @@ import { TiltCard } from "@/components/animations/TiltCard";
 import { SectionHeading } from "@/components/animations/SectionHeading";
 import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { useApiData } from "@/hooks/useApiData";
+import { useT } from "@/contexts/LocaleContext";
 
 function formatNumber(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
@@ -62,6 +63,7 @@ function ProjectCardSkeleton() {
 }
 
 export function ProjectsSection() {
+  const t = useT();
   const { data, loading } = useApiData<ProjectItem[]>("/api/github/projects");
   const projects = data ?? [];
 
@@ -75,13 +77,16 @@ export function ProjectsSection() {
 
       <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
         {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
-        <SectionHeading index="04" label="Projects" title="Things I've built." />
+        <SectionHeading
+          index="04"
+          label={t.projects.label}
+          title={t.projects.title}
+        />
         <p
           className="fade-up-soft text-sm sm:text-base mb-6"
           style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
         >
-          A selection of pinned repositories — from a 1.9k-star blog manager
-          to an AI-powered CMS core.
+          {t.projects.subtitle}
         </p>
 
         {/* 卡片网格：交错入场 + 3D 倾斜 */}
@@ -206,7 +211,7 @@ export function ProjectsSection() {
                           className="ml-auto text-[9px] font-mono"
                           style={{ color: "var(--accent)" }}
                         >
-                          contributor
+                          {t.projects.contributor}
                         </span>
                       )}
                     </div>
@@ -236,7 +241,7 @@ export function ProjectsSection() {
                 "var(--text-secondary)";
             }}
           >
-            See all on GitHub
+            {t.projects.seeAll}
             <ArrowUpRight size={13} />
           </a>
         </div>

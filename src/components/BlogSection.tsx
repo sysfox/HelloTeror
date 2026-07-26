@@ -7,6 +7,23 @@ import { MagneticButton } from "@/components/animations/MagneticButton";
 import { SectionHeading } from "@/components/animations/SectionHeading";
 import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { useApiData } from "@/hooks/useApiData";
+import { useLocale } from "@/contexts/LocaleContext";
+
+/**
+ * ISO 日期 → 本地化短日期（"Jun 23, 2026" / "2026年6月23日"）。
+ * 固定 timeZone: "UTC"，与 mxspace.ts 的 toIsoDate 口径一致，避免跨时区差一天。
+ */
+function formatPostDate(iso: string, intlLocale: string): string {
+  if (!iso) return "";
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat(intlLocale, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+}
 
 function BlogListSkeleton() {
   return (
@@ -47,6 +64,7 @@ function BlogListSkeleton() {
 }
 
 export function BlogSection() {
+  const { t, intlLocale } = useLocale();
   const { data, loading } = useApiData<BlogPost[]>("/api/blog");
   const posts = data ?? [];
 
@@ -60,13 +78,12 @@ export function BlogSection() {
 
       <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
         {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
-        <SectionHeading index="05" label="Writing" title="Recent writing." />
+        <SectionHeading index="05" label={t.blog.label} title={t.blog.title} />
         <p
           className="fade-up-soft text-sm sm:text-base mb-6"
           style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
         >
-          Notes from the field — development logs, security write-ups, and
-          occasional reflections.
+          {t.blog.subtitle}
         </p>
 
         {/* 文章列表：逐项错峰入场（列表行无需 TiltCard，保持轻量）
@@ -146,7 +163,7 @@ export function BlogSection() {
                       className="hidden sm:inline text-[10px] sm:text-xs font-mono"
                       style={{ color: "var(--text-tertiary)" }}
                     >
-                      {post.date}
+                      {formatPostDate(post.date, intlLocale)}
                     </span>
                     <MagneticButton strength={0.5} tilt={0} enableTilt={false}>
                       <ArrowUpRight
@@ -190,7 +207,7 @@ export function BlogSection() {
               (e.currentTarget as HTMLElement).style.background = "var(--surface)";
             }}
           >
-            Visit blog.trfox.top
+            {t.blog.visit}
             <ArrowUpRight size={13} />
           </a>
         </div>

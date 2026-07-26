@@ -12,31 +12,29 @@ import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
 import { SectionHeading } from "@/components/animations/SectionHeading";
 import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
+import { useT } from "@/contexts/LocaleContext";
 
-type FactName = "pin" | "building" | "cap" | "spark";
+/** 工作室名：专有名词，不进字典 */
+const AFFILIATION = "TF Studio";
 
-const FACTS: { icon: FactName; label: string; value: string }[] = [
-  { icon: "pin", label: "Location", value: "China" },
-  { icon: "building", label: "Affiliation", value: "TF Studio" },
-  { icon: "cap", label: "Role", value: "Student & Developer" },
-  { icon: "spark", label: "Focus", value: "Open Source & AI" },
-];
-
-const FACT_ICONS: Record<FactName, LucideIcon> = {
-  pin: MapPin,
-  building: Building2,
-  cap: GraduationCap,
-  spark: Sparkles,
-};
-
-const ACHIEVEMENTS = [
+/** GitHub 成就徽章名为专有名词，不翻译；仅 count 里的 "Member" 走字典 */
+const ACHIEVEMENTS: { title: string; count: string | null }[] = [
   { title: "Pair Extraordinaire", count: "x2" },
   { title: "Pull Shark", count: "x2" },
-  { title: "Developer Program", count: "Member" },
+  { title: "Developer Program", count: null },
   { title: "GitHub Pro", count: "" },
-] as const;
+];
 
 export function AboutSection() {
+  const t = useT();
+
+  const FACTS: { icon: LucideIcon; label: string; value: string }[] = [
+    { icon: MapPin, label: t.about.factLocation, value: t.about.factLocationValue },
+    { icon: Building2, label: t.about.factAffiliation, value: AFFILIATION },
+    { icon: GraduationCap, label: t.about.factRole, value: t.about.factRoleValue },
+    { icon: Sparkles, label: t.about.factFocus, value: t.about.factFocusValue },
+  ];
+
   return (
     <section
       id="about"
@@ -47,16 +45,12 @@ export function AboutSection() {
 
       <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
         {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
-        <SectionHeading
-          index="01"
-          label="About"
-          title="An independent developer."
-        />
+        <SectionHeading index="01" label={t.about.label} title={t.about.title} />
         <p
           className="fade-up-soft text-base sm:text-lg font-mono mb-8"
           style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
         >
-          coding with love.
+          {t.about.subtitle}
         </p>
 
         {/* 内容网格：左右两列各块作为 data-stagger-item 直接子级交错入场 */}
@@ -71,14 +65,11 @@ export function AboutSection() {
               className="text-sm sm:text-base leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
             >
-              I&apos;m{" "}
+              {t.about.bioBefore}
               <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>
                 Teror Fox
-              </span>{" "}
-              — a creative developer passionate about open source and building
-              beautiful things. I build for the web, tinker with AI, and
-              occasionally hunt for security holes. By day a student, by night a
-              maker.
+              </span>
+              {t.about.bioAfter}
             </p>
 
             {/* Code-style identity card */}
@@ -116,20 +107,21 @@ export function AboutSection() {
                   <span style={{ color: "var(--text-tertiary)" }}>$</span>{" "}
                   <span style={{ color: "var(--accent)" }}>whoami</span>
                   {"\n"}
-                  sysfox — Creative Dev, Open Source Enthusiast
+                  {t.about.shellWhoami}
                   {"\n\n"}
                   <span style={{ color: "var(--text-tertiary)" }}>$</span>{" "}
                   <span style={{ color: "var(--accent)" }}>cat</span> bio.txt
                   {"\n"}
-                  Fighting for the AI age. Building beautiful
-                  {"\n"}things with TypeScript &amp; Python since 2022.
+                  {t.about.shellBioLine1}
+                  {"\n"}
+                  {t.about.shellBioLine2}
                   {"\n\n"}
                   <span style={{ color: "var(--text-tertiary)" }}>$</span>{" "}
                   <span style={{ color: "var(--accent)" }}>status</span> --now
                   {"\n"}
-                  <span style={{ color: "#28c840" }}>●</span> open to collaborations
+                  <span style={{ color: "#28c840" }}>●</span> {t.about.shellStatus1}
                   {"\n"}
-                  <span style={{ color: "#febc2e" }}>●</span> shipping side-projects
+                  <span style={{ color: "#febc2e" }}>●</span> {t.about.shellStatus2}
                 </code>
               </pre>
             </div>
@@ -140,7 +132,7 @@ export function AboutSection() {
             {/* Facts grid：每张 fact 卡片用 TiltCard 包裹，3D 倾斜 */}
             <div className="grid grid-cols-2 gap-2.5">
               {FACTS.map((fact) => {
-                const Icon = FACT_ICONS[fact.icon];
+                const Icon = fact.icon;
                 return (
                   <TiltCard key={fact.label} maxTilt={6} scale={1.04}>
                     <div
@@ -198,7 +190,7 @@ export function AboutSection() {
                   className="text-[10px] uppercase tracking-wider"
                   style={{ color: "var(--text-tertiary)" }}
                 >
-                  Achievements
+                  {t.about.achievements}
                 </span>
               </div>
               <ul className="space-y-1.5">
@@ -212,7 +204,7 @@ export function AboutSection() {
                       className="font-mono text-[11px]"
                       style={{ color: "var(--accent)" }}
                     >
-                      {a.count}
+                      {a.count ?? t.about.achievementMember}
                     </span>
                   </li>
                 ))}
@@ -231,7 +223,7 @@ export function AboutSection() {
                 className="text-xs sm:text-sm italic leading-relaxed"
                 style={{ color: "var(--text-secondary)" }}
               >
-                “当第一颗卫星飞向大气层外，我们便以为自己终有一日会征服宇宙。”
+                {t.about.quote}
               </p>
               <p
                 className="mt-1.5 text-[10px] font-mono"

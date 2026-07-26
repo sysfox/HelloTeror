@@ -1,12 +1,13 @@
 export interface TechItem {
   name: string;
-  /** Optional short note, e.g. "Primary" or "Learning" */
-  note?: string;
+  /** 主力技术标记，渲染为 t.tech.notePrimary（原 note?: string，改为布尔以便 i18n） */
+  primary?: boolean;
 }
 
 export interface TechCategory {
   id: string;
-  label: string;
+  /** 字典键（t.tech 下的分类标签），非显示文案 */
+  labelKey: "catLangs" | "catFrontend" | "catBackend" | "catInfra" | "catTools";
   icon: string;
   items: TechItem[];
 }
@@ -37,7 +38,7 @@ export interface ProjectItem {
 export interface BlogPost {
   id: string;
   title: string;
-  /** ISO-ish date string for display, e.g. "Jun 23, 2026" */
+  /** ISO 日期串（YYYY-MM-DD）。显示格式由客户端按 locale 用 Intl 渲染。 */
   date: string;
   category: string;
   url: string;

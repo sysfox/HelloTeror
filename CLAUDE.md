@@ -24,20 +24,33 @@ Env vars are optional: copy `.env.example` → `.env.local`. Without them the si
 
 `src/app/page.tsx` is the only page route. The six "pages" (`home` `about` `tech` `stats` `projects` `blog`) are **components swapped in place** — there is no URL change, no browser history, no scrolling. `<body>` is `overflow-hidden` and the app is `fixed inset-0`; every section renders as `w-full h-full` centered content.
 
-Navigation state lives in `src/contexts/PageContext.tsx` (`PageId`, `PAGE_ORDER`, `navigate`, forward/backward `direction`, and a `TRANSITION_CYCLE` that alternates `curtain` / `zoom-blur` on each move). Wheel/touch/arrow-key stepping comes from `useFullPageScroll`.
+`/` is **dynamically rendered** (`ƒ` in build output), not static: `layout.tsx` reads the locale cookie / `Accept-Language` (see i18n below). The three API routes keep their ISR.
 
-**To add a page**, all four must be updated: the `PageId` union + `PAGE_ORDER` (`contexts/PageContext.tsx`), the `PAGES` map (`components/PageShell.tsx`), `NAV_LINKS` (`components/SiteNav.tsx`), and the section's `SectionGhostNumber index` (`01`–`05`, `home` has none).
+Navigation state lives in `src/contexts/PageContext.tsx` (`PageId`, `PAGE_ORDER`, `navigate`, forward/backward `direction`, a `TRANSITION_CYCLE` that rotates through the four transition types on each move, and `transitioning` + `setTransitioning`). `transitioning` is written by `PageShell` but **lives in the context** so persistent layers outside `PageShell` can react to a transition — currently `AuroraBackground`'s surge. Wheel/touch/arrow-key stepping comes from `useFullPageScroll`.
+
+**To add a page**, all five must be updated: the `PageId` union + `PAGE_ORDER` (`contexts/PageContext.tsx`), the `PAGES` map (`components/PageShell.tsx`), `NAV_LINKS` (`components/SiteNav.tsx` — now just `PageId[]`, labels come from the dictionary), the `nav` + `wordmark` keys in **both** locales (`src/i18n/dictionaries.ts`), and the section's `SectionGhostNumber index` (`01`–`05`, `home` has none).
 
 ### Page transition machinery (`PageShell` + `lib/pageTransitions.ts`)
 
 The trickiest part of the codebase. During a transition **two layers render simultaneously**: an exit layer (old page) and an enter layer (new page). `runTransition` drives both with a single anime.js timeline; its `onComplete` calls `finish()`, which swaps `displayed`, clears leftover inline styles (`clearTransitionStyles`), and unlocks scrolling.
 
+Four transition types rotate via `TRANSITION_CYCLE`:
+
+| type | shape | overlay DOM | duration |
+|---|---|---|---|
+| `curtain` | accent 幕布横扫覆盖 → 揭示 | `.curtain-panel` | 550 |
+| `zoom-blur` | 缩放 + 模糊交叉淡入淡出 | — | 550 |
+| `type-wipe` | 幕布 + 目标页超大词标反向视差 | `.curtain-panel` > `.curtain-wordmark` | 780 |
+| `slats` | 10 条竖条 stagger 覆盖 → 同向划出 | `.slats-overlay` > `.slat-cell` | 820 |
+
+Adding a type means touching four places: the `TransitionType` union, `TRANSITION_CYCLE` (both in `contexts/PageContext.tsx`), `TRANSITION_DURATIONS` + the `runTransition` switch (`lib/pageTransitions.ts`), and the overlay DOM + ref in `PageShell`. `TRANSITION_DURATIONS` is a `Record<TransitionType, number>`, so forgetting to register a duration is a type error.
+
 Invariants to preserve when touching this:
-- The enter layer's `key` is the new page id — the remount is deliberate, it replays each section's entrance animations.
-- The exit layer is wrapped in `.transition-exit-snapshot`, whose CSS forces the subtree visible (`opacity/animation/filter/clip-path` with `!important`) so the remounted old page doesn't flash or replay animations. It intentionally does **not** touch `transform`.
-- A `setTimeout(finish, TRANSITION_MS + 400)` safety net exists so a broken timeline can never leave the UI permanently locked.
-- `TRANSITION_MS` (550, in `lib/anime.ts`) is paired with `useFullPageScroll`'s `cooldownMs` (600) — change one, check the other.
-- `prefersReducedMotion()` short-circuits `runTransition` to an immediate `finish()`.
+- The enter layer's `key` is `` `enter-${page}-${locale}` `` — the remount is deliberate: it replays each section's entrance animations on navigation **and** on a language switch.
+- The exit layer is wrapped in `.transition-exit-snapshot`, whose CSS forces the subtree visible (`opacity/animation/filter/clip-path` with `!important`) so the remounted old page doesn't flash or replay animations. It intentionally does **not** touch `transform`. Note `filter: none` strips *all* filters in that subtree, including non-entrance ones — that is why the aurora orbs were promoted out of `PageShell` (see below); a new persistent `filter` inside a section would need a `:not()` exception.
+- A `setTimeout(finish, TRANSITION_DURATIONS[transition] + 400)` safety net exists so a broken timeline can never leave the UI permanently locked.
+- `useFullPageScroll`'s `cooldownMs` is derived from `MAX_TRANSITION_MS` rather than hardcoded — no more "changed one, forgot the other".
+- `prefersReducedMotion()` short-circuits `runTransition` to an immediate `finish()`. Overlays therefore render for a single frame; their init-hidden/off-screen CSS is what keeps that frame invisible (see the reduced-motion caveat below).
 
 ### anime.js conventions
 

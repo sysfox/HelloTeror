@@ -726,6 +726,48 @@
   background: var(--transition-curtain-bg);
   box-shadow: 0 0 60px rgba(41, 151, 255, 0.35);
 }
+/* type-wipe 词标：印在幕布上的目标页超大页名，随幕布反向视差掠过。
+   opacity:0 是防 FOUC 的初始隐态，由 runTransition 抬升。
+   刻意**不**加入底部 prefers-reduced-motion 白名单：减少动效时 runTransition
+   直接 finish()，幕布仅存在一帧，置 opacity:1 反而会闪一下大字。 */
+.curtain-wordmark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(3rem, 13vw, 11rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  color: var(--text-primary);
+  text-shadow: 0 0 80px var(--accent-glow);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* slats 百叶窗叠加层：等宽竖条铺满整屏，各条独立 translateY */
+.slats-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  pointer-events: none;
+}
+/* 单条竖条。initial translateY(-100%) 是防 FOUC 的屏外初始态
+  （backward 方向 anime 首帧即改写为 +100%，两种方向下都在屏外，不会闪）。
+   刻意**不**加入底部 prefers-reduced-motion 白名单：那里会置 transform:none，
+   反而把竖条摆到屏幕正中盖住整页。
+   背景复用 --transition-curtain-bg：横向渐变在每条内各压缩一遍，
+   天然形成条带明暗节奏；inset 描边进一步分隔相邻条。 */
+.slat-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  transform: translateY(-100%);
+  will-change: transform;
+  background: var(--transition-curtain-bg);
+  box-shadow: inset 1px 0 0 var(--accent-border);
+}
 /* MagneticButton / TiltCard 3D 上下文 */
 .preserve-3d {
   transform-style: preserve-3d;
@@ -740,7 +782,11 @@
 }
 /* 切换退出层快照：强制旧页子树保持终态可见，避免重挂载触发的 FOUC / 入场动画重播。
    仅覆盖 opacity / animation / filter / clip-path（不动 transform，以免破坏布局位移）；
-   !important 用于压过 anime.js 写入的 inline 样式与 CSS 入场动画。 */
+   !important 用于压过 anime.js 写入的 inline 样式与 CSS 入场动画。
+
+   注意 `filter: none` 会剥掉子树里**所有**滤镜，包括并非入场动画的常驻 blur。
+   极光光球正因如此被上提为全站持久层（app/page.tsx），不再位于本子树内；
+   将来若在 section 内引入常驻 filter，需要在此加 :not() 例外，否则退出瞬间会突变。 */
 .transition-exit-snapshot * {
   opacity: 1 !important;
   animation: none !important;

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { prefersReducedMotion } from "@/lib/anime";
+import { useT } from "@/contexts/LocaleContext";
 
 /**
  * 终端命令块（animejs.com 风格 + 语法高亮 + 逐行打字机）：
@@ -24,30 +25,6 @@ type Line =
 
 const PROMPT_PREFIX = "~/teror-fox $ ";
 
-const SESSION: Line[] = [
-  { type: "prompt", command: "whoami" },
-  { type: "output", text: "teror-fox" },
-  { type: "blank" },
-  { type: "prompt", command: "cat about.md" },
-  { type: "output", text: "# Student && Developer" },
-  { type: "output", text: "Fighting for the AI age" },
-  { type: "blank" },
-  { type: "prompt", command: "ls skills/" },
-  { type: "output", text: "typescript/  nextjs/  animejs/  python/  rust/" },
-  { type: "blank" },
-  { type: "prompt", command: "status --now" },
-  { type: "output", text: `● online · UTC+8 · ${new Date().getFullYear()}.${String(new Date().getMonth() + 1).padStart(2, '0')}`, accent: true },
-];
-
-
-
-/** 复制用完整文本（含 prompt 前缀） */
-const FULL_TEXT = SESSION.map((l) => {
-  if (l.type === "prompt") return `${PROMPT_PREFIX}${l.command}`;
-  if (l.type === "output") return l.text;
-  return "";
-}).join("\n");
-
 type RenderedLine = {
   type: "prompt" | "output" | "blank";
   typed: string;
@@ -61,23 +38,67 @@ export function TerminalBlock({
   startDelay?: number;
   className?: string;
 }) {
+  const t = useT();
   const [lines, setLines] = useState<RenderedLine[]>([]);
   const [copied, setCopied] = useState(false);
   const timersRef = useRef<number[]>([]);
+
+  // 会话内容随语言变化：命令本身属于"代码"不翻译，只翻译输出行。
+  // session 作为下方 effect 的依赖 → 切换语言时重播打字机，
+  // 而不是把新语言的行追加到旧语言的输出后面。
+  const session = useMemo<Line[]>(() => {
+    const now = new Date();
+    const stamp = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return [
+      { type: "prompt", command: "whoami" },
+      { type: "output", text: t.terminal.whoami },
+      { type: "blank" },
+      { type: "prompt", command: "cat about.md" },
+      { type: "output", text: t.terminal.aboutHeading },
+      { type: "output", text: t.terminal.aboutTagline },
+      { type: "blank" },
+      { type: "prompt", command: "ls skills/" },
+      { type: "output", text: t.terminal.skills },
+      { type: "blank" },
+      { type: "prompt", command: "status --now" },
+      {
+        type: "output",
+        text: `● ${t.terminal.statusOnline} · UTC+8 · ${stamp}`,
+        accent: true,
+      },
+    ];
+  }, [t]);
+
+  /** 复制用完整文本（含 prompt 前缀） */
+  const fullText = useMemo(
+    () =>
+      session
+        .map((l) => {
+          if (l.type === "prompt") return `${PROMPT_PREFIX}${l.command}`;
+          if (l.type === "output") return l.text;
+          return "";
+        })
+        .join("\n"),
+    [session]
+  );
 
   useEffect(() => {
     const timers = timersRef.current;
     timers.length = 0;
 
+    // 语言切换导致 effect 重跑时清空已打字内容，否则新旧语言的行会叠加。
+    // 打字机本质是"effect 驱动的时间序列"，同步置初态是刻意为之。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLines([]);
+
     if (prefersReducedMotion()) {
       // reduced-motion 兜底：直接渲染完整会话
-      const full: RenderedLine[] = SESSION.map((l) => {
+      const full: RenderedLine[] = session.map((l) => {
         if (l.type === "prompt") return { type: "prompt", typed: l.command };
         if (l.type === "output")
           return { type: "output", typed: l.text, accent: l.accent };
         return { type: "blank", typed: "" };
       });
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLines(full);
       return;
     }
@@ -87,10 +108,10 @@ export function TerminalBlock({
 
     const startT = window.setTimeout(() => {
       const processLine = () => {
-        if (lineIdx >= SESSION.length) {
+        if (lineIdx >= session.length) {
           return;
         }
-        const line = SESSION[lineIdx];
+        const line = session[lineIdx];
 
         if (line.type === "blank") {
           setLines((prev) => [...prev, { type: "blank", typed: "" }]);
@@ -134,14 +155,14 @@ export function TerminalBlock({
     timers.push(startT);
 
     return () => {
-      timers.forEach((t) => window.clearTimeout(t));
+      timers.forEach((timer) => window.clearTimeout(timer));
       timers.length = 0;
     };
-  }, [startDelay]);
+  }, [startDelay, session]);
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(FULL_TEXT);
+      await navigator.clipboard.writeText(fullText);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -177,7 +198,7 @@ export function TerminalBlock({
           onClick={copy}
           className="ml-auto inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors hover:bg-[var(--surface-hover)]"
           style={{ color: "var(--text-tertiary)" }}
-          aria-label="Copy terminal output"
+          aria-label={t.a11y.copyTerminal}
         >
           {copied ? <Check size={13} /> : <Copy size={13} />}
         </button>

@@ -13,17 +13,16 @@ import type { BlogPost } from "@/types";
 const BLOG_BASE_URL =
   process.env.BLOG_BASE_URL?.replace(/\/$/, "") ?? "https://blog.trfox.top";
 
-const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-
-/** 将 ISO 时间格式化为 "Jun 23, 2026" 风格（UTC，避免时区偏移）。 */
-function formatDate(iso: string | null | undefined): string {
+/**
+ * 规范化为 ISO 日期串（YYYY-MM-DD，UTC）。
+ * 不在服务端做显示格式化：日期文案需随 locale 变化，
+ * 而 locale 是客户端状态，故只输出与语言无关的 ISO，由 BlogSection 用 Intl 渲染。
+ */
+function toIsoDate(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return `${MONTHS[d.getUTCMonth()]} ${String(d.getUTCDate()).padStart(2, "0")}, ${d.getUTCFullYear()}`;
+  return d.toISOString().slice(0, 10);
 }
 
 /** 解析 MXSPACE_API_BASE → v3 根 URL，兼容末尾带 /posts 或 / 的写法。 */
@@ -75,7 +74,7 @@ function toPosts(items: MxPost[]): PostWithSort[] {
     return {
       id: p.id,
       title: p.title,
-      date: formatDate(sortIso),
+      date: toIsoDate(sortIso),
       category: p.category?.name ?? "文章",
       url,
       excerpt: p.summary ?? undefined,
@@ -90,7 +89,7 @@ function toNotes(items: MxNote[]): PostWithSort[] {
     return {
       id: `note-${n.nid}`,
       title: n.title,
-      date: formatDate(sortIso),
+      date: toIsoDate(sortIso),
       category: "笔记",
       url: `${BLOG_BASE_URL}/notes/${n.nid}`,
       _sort: sortIso ? new Date(sortIso).getTime() : 0,
@@ -138,35 +137,35 @@ export const FALLBACK_POSTS: BlogPost[] = [
   {
     id: "1",
     title: "Oh-My-Posh 调教全记录：从报错到完美配置",
-    date: "Jun 23, 2026",
+    date: "2026-06-23",
     category: "开发",
     url: "https://blog.trfox.top/posts/develope/struggle-installing-oh-my-posh",
   },
   {
     id: "2",
     title: "我是如何水到 Qexo 的一个高危漏洞的（9.3分）？",
-    date: "May 02, 2026",
+    date: "2026-05-02",
     category: "网络安全",
     url: "https://blog.trfox.top/posts/cybersecurity/how-i-found-qexo-high-risk-vulnerability",
   },
   {
     id: "3",
     title: "迷茫中的希望",
-    date: "Mar 28, 2026",
+    date: "2026-03-28",
     category: "笔记",
     url: "https://blog.trfox.top/notes/14",
   },
   {
     id: "4",
     title: "Tinder 开发笔记——随想象一路前进",
-    date: "Feb 22, 2026",
+    date: "2026-02-22",
     category: "开发笔记",
     url: "https://blog.trfox.top/posts/develope/tinder-development-notes-exploration",
   },
   {
     id: "5",
     title: "测试工程师的笑话中包含哪些你必须知道的内容？",
-    date: "Feb 17, 2026",
+    date: "2026-02-17",
     category: "开发笔记",
     url: "https://blog.trfox.top/posts/develope/essential-content-in-test-engineer-jokes",
   },

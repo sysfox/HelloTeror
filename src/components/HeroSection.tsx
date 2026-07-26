@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { usePage } from "@/contexts/PageContext";
-import { AuroraBackground } from "@/components/animations/AuroraBackground";
+import { useT } from "@/contexts/LocaleContext";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { ScrambleText } from "@/components/animations/ScrambleText";
@@ -20,7 +20,6 @@ import { TerminalBlock } from "@/components/animations/TerminalBlock";
 import { SITE_LINKS } from "@/config/site";
 
 const AVATAR = "https://avatars.githubusercontent.com/u/99103591?v=4";
-const SKILLS = ["TypeScript", "Next.js", "anime.js", "Python", "Rust", "React"];
 
 /** KineticLoader 完成时写入的 sessionStorage key，用于时序同步 */
 const LOADER_KEY = "teror-fox-loader-played";
@@ -36,9 +35,9 @@ function SiteLinkIcon({ id }: { id: string }) {
 }
 
 /**
- * Hero 首屏（左右双栏 × 极光背景 × 终端会话）：
- *  - 背景：AuroraBackground 多色光晕极光（替换旧网格光球 + Canvas 粒子）
- *  - 左栏：元数据条 → 巨型 "Teror Fox"（ScrambleText）→ 副标题 → bio → CTA → 站点链接行 → 技能标签
+ * Hero 首屏（左右双栏 × 终端会话）：
+ *  - 背景：AuroraBackground 已上提为全站持久层（见 app/page.tsx），本组件不再渲染
+ *  - 左栏：元数据条 → 巨型 "Teror Fox"（ScrambleText）→ 副标题 → bio → CTA → 站点链接行
  *  - 右栏：TerminalBlock 多行会话终端（语法高亮 + 逐行打字机）
  *  - 桌面 lg:grid-cols-2 双栏，移动端单列居中
  *
@@ -49,6 +48,7 @@ function SiteLinkIcon({ id }: { id: string }) {
  */
 export function HeroSection() {
   const { navigate } = usePage();
+  const t = useT();
   const [ready, setReady] = useState(false);
   const [startDelay, setStartDelay] = useState(1900);
 
@@ -66,9 +66,6 @@ export function HeroSection() {
       id="home"
       className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden px-6"
     >
-      {/* 背景层：极光多色光晕 */}
-      <AuroraBackground />
-
       {ready && (
         <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-12 w-full max-w-6xl items-center">
           {/* ===== 左栏：信息 + CTA + 站点链接 + 技能 ===== */}
@@ -123,7 +120,7 @@ export function HeroSection() {
                 style={{ color: "var(--text-tertiary)" }}
               >
                 <span className="status-pulse w-1.5 h-1.5 rounded-full bg-[#28c840]" />
-                online
+                {t.common.online}
               </span>
               <span
                 className="w-px h-3"
@@ -166,15 +163,17 @@ export function HeroSection() {
                 data-stagger-item
                 style={{ color: "var(--text-primary)", textWrap: "balance" }}
               >
-                Fighting for the AI age
+                {t.hero.tagline}
               </p>
               <p
                 className="mt-2 text-sm sm:text-base font-mono"
                 data-stagger-item
                 style={{ color: "var(--text-tertiary)" }}
               >
-                Student &amp;&amp;{" "}
-                <span style={{ color: "var(--accent)" }}>&lt;Developer /&gt;</span>
+                {t.hero.roleStudent} &amp;&amp;{" "}
+                <span style={{ color: "var(--accent)" }}>
+                  {t.hero.roleDeveloper}
+                </span>
               </p>
 
               {/* bio 段落：平衡双栏视觉 */}
@@ -183,9 +182,7 @@ export function HeroSection() {
                 data-stagger-item
                 style={{ color: "var(--text-secondary)", textWrap: "balance" }}
               >
-                Crafting expressive, performant interfaces for the AI age.
-                Student by day, developer by night — exploring systems, design,
-                and everything between.
+                {t.hero.bio}
               </p>
 
               {/* CTAs：磁吸 + 描边矩形 + scale on press */}
@@ -203,7 +200,7 @@ export function HeroSection() {
                       boxShadow: "0 0 24px var(--accent-glow)",
                     }}
                   >
-                    View Projects
+                    {t.hero.ctaProjects}
                     <ArrowUpRight
                       size={14}
                       className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
@@ -222,7 +219,7 @@ export function HeroSection() {
                       color: "var(--text-primary)",
                     }}
                   >
-                    Read Blog
+                    {t.hero.ctaBlog}
                   </button>
                 </MagneticButton>
 
@@ -235,7 +232,7 @@ export function HeroSection() {
                       background: "var(--surface)",
                       color: "var(--text-primary)",
                     }}
-                    aria-label="Email Teror Fox"
+                    aria-label={t.a11y.emailMe}
                   >
                     <Mail size={16} />
                   </a>
@@ -261,7 +258,7 @@ export function HeroSection() {
                     }}
                   >
                     <SiteLinkIcon id={link.id} />
-                    {link.label}
+                    {t.links[link.id]}
                   </a>
                 ))}
               </div>

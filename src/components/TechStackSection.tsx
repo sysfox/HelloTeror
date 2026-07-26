@@ -13,26 +13,27 @@ import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
 import { SectionHeading } from "@/components/animations/SectionHeading";
 import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
+import { useT } from "@/contexts/LocaleContext";
 
 const TECH: TechCategory[] = [
   {
     id: "langs",
-    label: "Languages",
+    labelKey: "catLangs",
     icon: "code",
     items: [
-      { name: "TypeScript", note: "Primary" },
-      { name: "Python", note: "Primary" },
+      { name: "TypeScript", primary: true },
+      { name: "Python", primary: true },
     ],
   },
   {
     id: "frontend",
-    label: "Frontend",
+    labelKey: "catFrontend",
     icon: "layers",
     items: [{ name: "React" }, { name: "Next.js" }],
   },
   {
     id: "backend",
-    label: "Backend",
+    labelKey: "catBackend",
     icon: "server",
     items: [
       { name: "NestJS" },
@@ -42,7 +43,7 @@ const TECH: TechCategory[] = [
   },
   {
     id: "infra",
-    label: "Infrastructure",
+    labelKey: "catInfra",
     icon: "database",
     items: [
       { name: "Docker" },
@@ -54,7 +55,7 @@ const TECH: TechCategory[] = [
   },
   {
     id: "tools",
-    label: "Tools & OS",
+    labelKey: "catTools",
     icon: "wrench",
     items: [
       { name: "VS Code" },
@@ -74,6 +75,8 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 export function TechStackSection() {
+  const t = useT();
+
   return (
     <section
       id="tech"
@@ -84,17 +87,12 @@ export function TechStackSection() {
 
       <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
         {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
-        <SectionHeading
-          index="02"
-          label="Tech Stack"
-          title="Tools of the trade."
-        />
+        <SectionHeading index="02" label={t.tech.label} title={t.tech.title} />
         <p
           className="fade-up-soft text-sm sm:text-base mb-6"
           style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
         >
-          A pragmatic stack honed across open-source work, side-projects, and
-          the occasional all-nighter.
+          {t.tech.subtitle}
         </p>
 
         {/* 分类卡片：交错入场 + 3D 倾斜 */}
@@ -153,7 +151,7 @@ export function TechStackSection() {
                         className="text-sm font-medium"
                         style={{ color: "var(--text-primary)" }}
                       >
-                        {cat.label}
+                        {t.tech[cat.labelKey]}
                       </h3>
                     </div>
 
@@ -181,12 +179,12 @@ export function TechStackSection() {
                           }}
                         >
                           {item.name}
-                          {item.note && (
+                          {item.primary && (
                             <span
                               className="text-[9px] font-mono"
                               style={{ color: "var(--accent)" }}
                             >
-                              {item.note}
+                              {t.tech.notePrimary}
                             </span>
                           )}
                         </li>
@@ -208,9 +206,9 @@ export function TechStackSection() {
                 className="text-xs"
                 style={{ color: "var(--text-tertiary)" }}
               >
-                Always learning
+                {t.tech.moreLine1}
                 <br />
-                the next thing.
+                {t.tech.moreLine2}
               </p>
               <span className="mt-2 text-xl spin-slow inline-block">✦</span>
             </div>

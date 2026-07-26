@@ -1,12 +1,13 @@
 export interface TechItem {
   name: string;
-  /** Optional short note, e.g. "Primary" or "Learning" */
-  note?: string;
+  /** 主力技术标记，渲染为 t.tech.notePrimary（原 note?: string，改为布尔以便 i18n） */
+  primary?: boolean;
 }
 
 export interface TechCategory {
   id: string;
-  label: string;
+  /** 字典键（t.tech 下的分类标签），非显示文案 */
+  labelKey: "catLangs" | "catFrontend" | "catBackend" | "catInfra" | "catTools";
   icon: string;
   items: TechItem[];
 }
@@ -37,7 +38,7 @@ export interface ProjectItem {
 export interface BlogPost {
   id: string;
   title: string;
-  /** ISO-ish date string for display, e.g. "Jun 23, 2026" */
+  /** ISO 日期串（YYYY-MM-DD）。显示格式由客户端按 locale 用 Intl 渲染。 */
   date: string;
   category: string;
   url: string;
@@ -51,6 +52,23 @@ export interface SocialLink {
   href: string;
   /** Icon key, see components/icons.tsx */
   icon: string;
+}
+
+/** 贡献热图的一天。level 由 GitHub 的 contributionLevel 枚举映射而来（0=无）。 */
+export interface ContributionDay {
+  /** ISO 日期串（YYYY-MM-DD） */
+  date: string;
+  count: number;
+  level: 0 | 1 | 2 | 3 | 4;
+}
+
+/**
+ * 贡献热图。weeks 为周列表，每周**恒为 7 项**（周日→周六）；
+ * 落在统计窗口外的格子为 null，由服务端补齐，客户端无需再判边界。
+ */
+export interface ContributionCalendar {
+  total: number;
+  weeks: (ContributionDay | null)[][];
 }
 
 /**
@@ -73,4 +91,6 @@ export interface GitHubStatsResponse {
   followers: number;
   /** Stars earned across own repos (sum of stargazers_count) */
   stars: number;
+  /** 本年贡献热图（contributionsCollection.contributionCalendar） */
+  calendar: ContributionCalendar;
 }

@@ -1,22 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, Mail, Sun, Moon } from "lucide-react";
+import { Menu, X, Mail, Sun, Moon, Languages } from "lucide-react";
 import { animate, EASE, prefersReducedMotion } from "@/lib/anime";
 import { cn } from "@/lib/utils";
 import { usePage, type PageId } from "@/contexts/PageContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLocale } from "@/contexts/LocaleContext";
 import Image from "next/image";
 import { SOCIAL_LINKS } from "@/config/site";
 
-const NAV_LINKS: { id: PageId; label: string }[] = [
-  { id: "home", label: "Home" },
-  { id: "about", label: "About" },
-  { id: "tech", label: "Tech" },
-  { id: "stats", label: "Stats" },
-  { id: "projects", label: "Projects" },
-  { id: "blog", label: "Blog" },
-];
+/** 导航显示顺序（与 PAGE_ORDER 一致但独立声明，允许两者将来分化）。文案取 t.nav[id]。 */
+const NAV_LINKS: PageId[] = ["home", "about", "tech", "stats", "projects", "blog"];
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -45,6 +40,7 @@ function SocialIcon({ id }: { id: string }) {
 export function SiteNav() {
   const { current, navigate } = usePage();
   const { theme, toggleTheme } = useTheme();
+  const { t, locale, toggleLocale } = useLocale();
   const [open, setOpen] = useState(false);
 
   const ulRef = useRef<HTMLUListElement>(null);
@@ -53,11 +49,12 @@ export function SiteNav() {
 
   // 滑动指示器：current 变化时 anime.js 把 accent 圆点滑到激活 tab 中心；
   // 首次定位 / reduced-motion 直接 snap。translateX(-50%) 让圆点居中于 left 锚点。
+  // locale 也是依赖：切换语言后 tab 宽度变化，需重新测距，否则圆点错位。
   useEffect(() => {
     const ul = ulRef.current;
     const ind = indicatorRef.current;
     if (!ul || !ind) return;
-    const activeIdx = NAV_LINKS.findIndex((l) => l.id === current);
+    const activeIdx = NAV_LINKS.indexOf(current);
     const btn = tabRefs.current[activeIdx];
     if (!btn) return;
     const ulRect = ul.getBoundingClientRect();
@@ -85,7 +82,7 @@ export function SiteNav() {
     return () => {
       anim.pause();
     };
-  }, [current]);
+  }, [current, locale]);
 
   // resize 重测距 snap（避免 tab 宽度变化后指示器错位）
   useEffect(() => {
@@ -93,7 +90,7 @@ export function SiteNav() {
       const ul = ulRef.current;
       const ind = indicatorRef.current;
       if (!ul || !ind) return;
-      const activeIdx = NAV_LINKS.findIndex((l) => l.id === current);
+      const activeIdx = NAV_LINKS.indexOf(current);
       const btn = tabRefs.current[activeIdx];
       if (!btn) return;
       const ulRect = ul.getBoundingClientRect();
@@ -113,7 +110,7 @@ export function SiteNav() {
           onClick={() => navigate("home")}
           className="flex items-center gap-2 font-medium tracking-tight group theme-transition"
           style={{ color: "var(--text-primary)" }}
-          aria-label="Teror Fox home"
+          aria-label={t.a11y.homeLink}
         >
           <Image
             src="https://avatars.githubusercontent.com/u/99103591?v=4"
@@ -135,16 +132,16 @@ export function SiteNav() {
             className="pointer-events-none absolute -bottom-0.5 w-1 h-1 rounded-full bg-[var(--accent)]"
             style={{ left: 0, transform: "translateX(-50%)", opacity: 0 }}
           />
-          {NAV_LINKS.map((link, i) => {
-            const active = current === link.id;
+          {NAV_LINKS.map((id, i) => {
+            const active = current === id;
             return (
-              <li key={link.id}>
+              <li key={id}>
                 <button
                   ref={(el) => {
                     tabRefs.current[i] = el;
                   }}
                   type="button"
-                  onClick={() => navigate(link.id)}
+                  onClick={() => navigate(id)}
                   className={cn(
                     "relative px-3 py-1.5 rounded-full transition-colors duration-300 theme-transition",
                     active
@@ -153,7 +150,7 @@ export function SiteNav() {
                   )}
                   aria-current={active ? "page" : undefined}
                 >
-                  {link.label}
+                  {t.nav[id]}
                 </button>
               </li>
             );
@@ -171,10 +168,25 @@ export function SiteNav() {
               background: "var(--surface)",
               color: "var(--text-tertiary)",
             }}
-            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-            title={theme === "dark" ? "Light" : "Dark"}
+            aria-label={theme === "dark" ? t.a11y.toLight : t.a11y.toDark}
+            title={theme === "dark" ? t.a11y.themeLight : t.a11y.themeDark}
           >
             {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+          </button>
+          {/* 语言切换：label 用目标语言自身书写（中文 / EN），无需图标即可辨识 */}
+          <button
+            type="button"
+            onClick={toggleLocale}
+            className="theme-toggle inline-flex items-center justify-center min-w-9 h-9 px-2.5 rounded-full border text-[11px] font-mono theme-transition"
+            style={{
+              borderColor: "var(--border-subtle)",
+              background: "var(--surface)",
+              color: "var(--text-tertiary)",
+            }}
+            aria-label={t.language.aria}
+            title={t.language.aria}
+          >
+            {t.language.label}
           </button>
           {SOCIAL_LINKS.map((link) => {
             const isExternal = !link.href.startsWith("mailto:");
@@ -190,7 +202,7 @@ export function SiteNav() {
                   background: "var(--surface)",
                   color: "var(--text-tertiary)",
                 }}
-                aria-label={link.label}
+                aria-label={t.links[link.id]}
               >
                 <SocialIcon id={link.id} />
               </a>
@@ -204,7 +216,7 @@ export function SiteNav() {
           onClick={() => setOpen((v) => !v)}
           className="md:hidden inline-flex items-center justify-center w-9 h-9 -mr-2 theme-transition"
           style={{ color: "var(--text-primary)" }}
-          aria-label={open ? "Close menu" : "Open menu"}
+          aria-label={open ? t.a11y.closeMenu : t.a11y.openMenu}
           aria-expanded={open}
         >
           {open ? <X size={18} /> : <Menu size={18} />}
@@ -225,14 +237,14 @@ export function SiteNav() {
         }}
       >
         <ul className="content-max-width flex flex-col py-3 gap-1">
-          {NAV_LINKS.map((link) => {
-            const active = current === link.id;
+          {NAV_LINKS.map((id) => {
+            const active = current === id;
             return (
-              <li key={link.id}>
+              <li key={id}>
                 <button
                   type="button"
                   onClick={() => {
-                    navigate(link.id);
+                    navigate(id);
                     setOpen(false);
                   }}
                   className={cn(
@@ -252,7 +264,7 @@ export function SiteNav() {
                         aria-hidden
                       />
                     )}
-                    {link.label}
+                    {t.nav[id]}
                   </span>
                 </button>
               </li>
@@ -266,7 +278,17 @@ export function SiteNav() {
               style={{ color: "var(--text-tertiary)" }}
             >
               {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-              {theme === "dark" ? "Light" : "Dark"}
+              {theme === "dark" ? t.a11y.themeLight : t.a11y.themeDark}
+            </button>
+            <button
+              type="button"
+              onClick={toggleLocale}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-transition"
+              style={{ color: "var(--text-tertiary)" }}
+              aria-label={t.language.aria}
+            >
+              <Languages size={14} />
+              {t.language.label}
             </button>
             {SOCIAL_LINKS.map((link) => {
               const isExternal = !link.href.startsWith("mailto:");
@@ -280,7 +302,7 @@ export function SiteNav() {
                   style={{ color: "var(--text-tertiary)" }}
                 >
                   <SocialIcon id={link.id} />
-                  {link.label}
+                  {t.links[link.id]}
                 </a>
               );
             })}

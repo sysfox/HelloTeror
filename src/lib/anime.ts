@@ -37,7 +37,12 @@ export type {
   AnimatableObject,
 } from "animejs";
 
-/** 页面切换过渡总时长（ms），须与 useFullPageScroll 的 cooldownMs(600) 配套 */
+/**
+ * 页面切换基准时长（ms）：curtain / zoom-blur 采用此值。
+ * 多段式切换（type-wipe / slats）另有更长时长，见 pageTransitions.ts 的
+ * TRANSITION_DURATIONS；滚动冷却与安全兜底统一按 MAX_TRANSITION_MS 取，
+ * 不再与此常量硬绑定。
+ */
 export const TRANSITION_MS = 550;
 
 /** 字符串缓动预设（anime.js v4 用 ease 而非 easing） */

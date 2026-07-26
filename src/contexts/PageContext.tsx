@@ -50,6 +50,13 @@ interface PageContextValue {
   direction: "forward" | "backward";
   transition: TransitionType;
   navigate: (id: PageId) => void;
+  /**
+   * 是否正在切换。由 PageShell 写入（它拥有 enter/exit 两层的时序），
+   * 上提到 context 是为了让 PageShell 之外的持久层也能参与转场
+   *（目前的消费者：AuroraBackground 的转场脉冲）。
+   */
+  transitioning: boolean;
+  setTransitioning: (value: boolean) => void;
 }
 
 const PageContext = createContext<PageContextValue | null>(null);
@@ -58,6 +65,7 @@ export function PageProvider({ children }: { children: ReactNode }) {
   const [current, setCurrent] = useState<PageId>("home");
   const [transitionIndex, setTransitionIndex] = useState(0);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
+  const [transitioning, setTransitioning] = useState(false);
 
   const navigate = useCallback(
     (id: PageId) => {
@@ -77,8 +85,10 @@ export function PageProvider({ children }: { children: ReactNode }) {
       direction,
       transition: TRANSITION_CYCLE[transitionIndex],
       navigate,
+      transitioning,
+      setTransitioning,
     }),
-    [current, direction, transitionIndex, navigate]
+    [current, direction, transitionIndex, navigate, transitioning]
   );
 
   return <PageContext.Provider value={value}>{children}</PageContext.Provider>;

@@ -19,8 +19,25 @@ import {
 } from "@/lib/anime";
 import type { TransitionType } from "@/contexts/PageContext";
 
-/** 切换总时长的一半，用于两段式动画的分段点 */
-const HALF = Math.round(TRANSITION_MS / 2);
+/**
+ * 各切换类型的总时长（ms）。
+ *
+ * 两段式/交错式切换需要比基准时长更多的空间才能拉出层次，
+ * 所以时长按类型分配而不是全站一个常量。
+ * 新增类型时必须在此登记，否则 TS 报错（Record<TransitionType, number> 完备性检查）。
+ */
+export const TRANSITION_DURATIONS: Record<TransitionType, number> = {
+  curtain: TRANSITION_MS,
+  "zoom-blur": TRANSITION_MS,
+};
+
+/**
+ * 最长切换时长：滚动冷却（useFullPageScroll.cooldownMs）按它取，
+ * 保证任何一种切换播完前都不会被下一次滚轮打断。
+ */
+export const MAX_TRANSITION_MS = Math.max(
+  ...Object.values(TRANSITION_DURATIONS)
+);
 
 export interface TransitionContext {
   /** 退出层 DOM（旧页），可能为 null */
@@ -52,6 +69,10 @@ export function runTransition(
   }
 
   const { exitEl, enterEl, curtainPanel, finish } = ctx;
+
+  /** 本次切换的总时长与分段点（两段式动画在 HALF 处交接） */
+  const TOTAL = TRANSITION_DURATIONS[type];
+  const HALF = Math.round(TOTAL / 2);
 
   const tl = createTimeline({
     defaults: { ease: EASE.expo },
@@ -110,7 +131,7 @@ export function runTransition(
             opacity: [1, 0],
             scale: [1, 0.92],
             filter: ["blur(0px)", "blur(8px)"],
-            duration: TRANSITION_MS,
+            duration: TOTAL,
             ease: EASE.expo,
           },
           0
@@ -123,7 +144,7 @@ export function runTransition(
             opacity: [0, 1],
             scale: [1.08, 1],
             filter: ["blur(8px)", "blur(0px)"],
-            duration: TRANSITION_MS,
+            duration: TOTAL,
             ease: EASE.expo,
           },
           0

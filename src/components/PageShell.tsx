@@ -10,8 +10,12 @@ import {
 import { usePage, PAGE_ORDER, type PageId } from "@/contexts/PageContext";
 import { useLocale, useT } from "@/contexts/LocaleContext";
 import { useFullPageScroll } from "@/hooks/useFullPageScroll";
-import { runTransition, clearTransitionStyles } from "@/lib/pageTransitions";
-import { TRANSITION_MS } from "@/lib/anime";
+import {
+  runTransition,
+  clearTransitionStyles,
+  TRANSITION_DURATIONS,
+  MAX_TRANSITION_MS,
+} from "@/lib/pageTransitions";
 import { HeroSection } from "@/components/HeroSection";
 import { AboutSection } from "@/components/AboutSection";
 import { TechStackSection } from "@/components/TechStackSection";
@@ -38,11 +42,17 @@ const PAGES: Record<PageId, ComponentType> = {
  * - 滚轮 / 触摸 / 方向键切换（useFullPageScroll），transitioning 期间锁定
  */
 export function PageShell() {
-  const { current, transition, direction, navigate } = usePage();
+  const {
+    current,
+    transition,
+    direction,
+    navigate,
+    transitioning,
+    setTransitioning,
+  } = usePage();
   const { locale } = useLocale();
   const [displayed, setDisplayed] = useState<PageId>(current);
   const [pending, setPending] = useState<PageId | null>(null);
-  const [transitioning, setTransitioning] = useState(false);
 
   const exitRef = useRef<HTMLDivElement>(null);
   const enterRef = useRef<HTMLDivElement>(null);
@@ -56,7 +66,7 @@ export function PageShell() {
       setTransitioning(true);
       window.setTimeout(() => setPending(next), 0);
     });
-  }, [current, displayed]);
+  }, [current, displayed, setTransitioning]);
 
   // pending 变化 → 运行切换动画；onComplete / 安全超时触发 finish 切换显示态
   useEffect(() => {
@@ -80,14 +90,17 @@ export function PageShell() {
       finish,
     });
 
-    // 安全兜底：即使 timeline 异常未触发 onComplete，也能解锁
-    const safety = window.setTimeout(finish, TRANSITION_MS + 400);
+    // 安全兜底：即使 timeline 异常未触发 onComplete，也能解锁（按本次切换类型的时长）
+    const safety = window.setTimeout(
+      finish,
+      TRANSITION_DURATIONS[transition] + 400
+    );
 
     return () => {
       window.clearTimeout(safety);
       cleanup?.();
     };
-  }, [pending, displayed, transition, direction]);
+  }, [pending, displayed, transition, direction, setTransitioning]);
 
   const handleStep = useCallback(
     (dir: 1 | -1) => {
@@ -100,7 +113,12 @@ export function PageShell() {
     [current, navigate, transitioning]
   );
 
-  useFullPageScroll({ onStep: handleStep, isLocked: transitioning });
+  // 冷却按最长切换时长取，避免"改了某个切换时长忘了改 cooldown"的老问题
+  useFullPageScroll({
+    onStep: handleStep,
+    isLocked: transitioning,
+    cooldownMs: MAX_TRANSITION_MS + 60,
+  });
 
   const showCurtain = pending !== null && transition === "curtain";
   const ActivePage = PAGES[pending ?? displayed];

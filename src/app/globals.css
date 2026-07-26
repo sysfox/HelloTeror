@@ -740,7 +740,11 @@
 }
 /* 切换退出层快照：强制旧页子树保持终态可见，避免重挂载触发的 FOUC / 入场动画重播。
    仅覆盖 opacity / animation / filter / clip-path（不动 transform，以免破坏布局位移）；
-   !important 用于压过 anime.js 写入的 inline 样式与 CSS 入场动画。 */
+   !important 用于压过 anime.js 写入的 inline 样式与 CSS 入场动画。
+
+   注意 `filter: none` 会剥掉子树里**所有**滤镜，包括并非入场动画的常驻 blur。
+   极光光球正因如此被上提为全站持久层（app/page.tsx），不再位于本子树内；
+   将来若在 section 内引入常驻 filter，需要在此加 :not() 例外，否则退出瞬间会突变。 */
 .transition-exit-snapshot * {
   opacity: 1 !important;
   animation: none !important;

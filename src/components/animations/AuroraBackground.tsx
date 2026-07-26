@@ -5,11 +5,19 @@ import {
   animate,
   createAnimatable,
   springSoft,
+  EASE,
   prefersReducedMotion,
 } from "@/lib/anime";
+import { usePage } from "@/contexts/PageContext";
 
 /**
- * Hero 极光背景：多色光晕缓慢流动融合，取代旧 AnimatedBackground 网格光球 + HeroVisual Canvas。
+ * 全站极光背景：多色光晕缓慢流动融合。
+ *
+ * 位置：由 page.tsx 渲染在 SiteNav / main / SiteFooter 之下（-z-10），
+ * 是**跨页持久层** —— 不随 PageShell 的 enter/exit 重挂载，因此可以连续地
+ * 参与页面切换（见下方"转场脉冲"）。这也顺带绕开了
+ * .transition-exit-snapshot 的 `filter: none !important`：
+ * 若光球仍在 exit 层子树内，退出瞬间 blur 会被剥掉，光球变成硬边彩色圆盘。
  *
  * 视觉策略：
  *  - 4 个大型 radial-gradient 光球（blue / purple / teal / orange），重 blur 融合成极光
@@ -17,15 +25,31 @@ import {
  *  - 桌面端鼠标视差（spring 跟随，分层避免 transform 冲突）
  *  - 超淡网格底纹（opacity 0.06 呼吸），保留科技感但不抢戏
  *
- * 分层（与 AnimatedBackground 一致）：
- *   wrapper(定位 + 视差 x/y) → 内层光球(漂浮 translateX/translateY/scale)
+ * 强度分级：首页满强度，内容页降到 PAGE_INTENSITY，避免抢正文对比度。
+ *
+ * 转场脉冲：切换期间整层 opacity 冲到 SURGE_INTENSITY 且轻微膨胀，
+ * 切换结束缓慢回落到目标页强度 —— 让背景参与转场而不是干看着。
+ * 强度与脉冲共用同一层的同两个属性（opacity / scale），
+ * 由单个 effect 独占写入，避免两条动画抢同一属性。
+ *
+ * 分层：
+ *   surge(强度 + 脉冲: opacity/scale) → wrapper(视差 x/y) → 光球(漂浮 translate/scale)
  *
  * 主题安全：纯 DOM + CSS gradient，无 Canvas fillStyle 硬编码。
  * 光球颜色走 CSS 变量 var(--aurora-N)，light 模式由 globals.css 提高透明度确保可见；
  * 因 background-image (gradient) 无法 transition，主题切换时用 MutationObserver
  * 监听 data-theme 变化，给光球加 .aurora-crossfade 触发 opacity 淡出淡入，缓解颜色突变。
- * reduced-motion 静态。
+ * reduced-motion 静态（强度仍按页面生效，只是不做动画）。
  */
+
+/** 首页强度 */
+const HOME_INTENSITY = 1;
+/** 内容页强度（降低以保正文对比度） */
+const PAGE_INTENSITY = 0.4;
+/** 转场瞬间的冲高强度 */
+const SURGE_INTENSITY = 1;
+/** 转场瞬间的膨胀倍率 */
+const SURGE_SCALE = 1.07;
 type OrbConfig = {
   pos: React.CSSProperties;
   size: number;
@@ -71,9 +95,47 @@ const ORBS: OrbConfig[] = [
 ];
 
 export function AuroraBackground({ className = "" }: { className?: string }) {
+  const { current, transitioning } = usePage();
+  const surgeRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const wrapRefs = useRef<(HTMLDivElement | null)[]>([]);
   const orbRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  /**
+   * 强度 + 转场脉冲：transitioning 置起时冲高并膨胀，落下时回落到当前页强度。
+   * 依赖里带 current，是为了让转场结束后落到**新页**的强度。
+   * 不用 JSX inline style 写 opacity：React 重渲染会覆盖 anime 写入的 inline 值。
+   */
+  useEffect(() => {
+    const el = surgeRef.current;
+    if (!el) return;
+
+    const target = current === "home" ? HOME_INTENSITY : PAGE_INTENSITY;
+
+    if (prefersReducedMotion()) {
+      el.style.opacity = String(target);
+      el.style.transform = "";
+      return;
+    }
+
+    const anim = transitioning
+      ? animate(el, {
+          opacity: SURGE_INTENSITY,
+          scale: SURGE_SCALE,
+          duration: 300,
+          ease: "outQuad",
+        })
+      : animate(el, {
+          opacity: target,
+          scale: 1,
+          duration: 900,
+          ease: EASE.expo,
+        });
+
+    return () => {
+      anim.pause();
+    };
+  }, [transitioning, current]);
 
   useEffect(() => {
     if (prefersReducedMotion()) return;
@@ -161,8 +223,10 @@ export function AuroraBackground({ className = "" }: { className?: string }) {
 
   return (
     <div
+      ref={surgeRef}
       aria-hidden
       className={`absolute inset-0 -z-10 overflow-hidden ${className}`}
+      style={{ willChange: "opacity, transform" }}
     >
       <div
         ref={gridRef}

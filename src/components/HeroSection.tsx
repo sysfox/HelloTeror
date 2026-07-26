@@ -13,7 +13,6 @@ import {
 import Image from "next/image";
 import { usePage } from "@/contexts/PageContext";
 import { useT } from "@/contexts/LocaleContext";
-import { AuroraBackground } from "@/components/animations/AuroraBackground";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { ScrambleText } from "@/components/animations/ScrambleText";
@@ -36,9 +35,9 @@ function SiteLinkIcon({ id }: { id: string }) {
 }
 
 /**
- * Hero 首屏（左右双栏 × 极光背景 × 终端会话）：
- *  - 背景：AuroraBackground 多色光晕极光（替换旧网格光球 + Canvas 粒子）
- *  - 左栏：元数据条 → 巨型 "Teror Fox"（ScrambleText）→ 副标题 → bio → CTA → 站点链接行 → 技能标签
+ * Hero 首屏（左右双栏 × 终端会话）：
+ *  - 背景：AuroraBackground 已上提为全站持久层（见 app/page.tsx），本组件不再渲染
+ *  - 左栏：元数据条 → 巨型 "Teror Fox"（ScrambleText）→ 副标题 → bio → CTA → 站点链接行
  *  - 右栏：TerminalBlock 多行会话终端（语法高亮 + 逐行打字机）
  *  - 桌面 lg:grid-cols-2 双栏，移动端单列居中
  *
@@ -67,9 +66,6 @@ export function HeroSection() {
       id="home"
       className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden px-6"
     >
-      {/* 背景层：极光多色光晕 */}
-      <AuroraBackground />
-
       {ready && (
         <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-12 w-full max-w-6xl items-center">
           {/* ===== 左栏：信息 + CTA + 站点链接 + 技能 ===== */}

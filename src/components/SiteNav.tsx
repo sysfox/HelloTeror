@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, Mail, Sun, Moon } from "lucide-react";
+import { Menu, X, Mail, Sun, Moon, Languages } from "lucide-react";
 import { animate, EASE, prefersReducedMotion } from "@/lib/anime";
 import { cn } from "@/lib/utils";
 import { usePage, type PageId } from "@/contexts/PageContext";
@@ -40,7 +40,7 @@ function SocialIcon({ id }: { id: string }) {
 export function SiteNav() {
   const { current, navigate } = usePage();
   const { theme, toggleTheme } = useTheme();
-  const { t, locale } = useLocale();
+  const { t, locale, toggleLocale } = useLocale();
   const [open, setOpen] = useState(false);
 
   const ulRef = useRef<HTMLUListElement>(null);
@@ -173,6 +173,21 @@ export function SiteNav() {
           >
             {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
           </button>
+          {/* 语言切换：label 用目标语言自身书写（中文 / EN），无需图标即可辨识 */}
+          <button
+            type="button"
+            onClick={toggleLocale}
+            className="theme-toggle inline-flex items-center justify-center min-w-9 h-9 px-2.5 rounded-full border text-[11px] font-mono theme-transition"
+            style={{
+              borderColor: "var(--border-subtle)",
+              background: "var(--surface)",
+              color: "var(--text-tertiary)",
+            }}
+            aria-label={t.language.aria}
+            title={t.language.aria}
+          >
+            {t.language.label}
+          </button>
           {SOCIAL_LINKS.map((link) => {
             const isExternal = !link.href.startsWith("mailto:");
             return (
@@ -264,6 +279,16 @@ export function SiteNav() {
             >
               {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
               {theme === "dark" ? t.a11y.themeLight : t.a11y.themeDark}
+            </button>
+            <button
+              type="button"
+              onClick={toggleLocale}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-transition"
+              style={{ color: "var(--text-tertiary)" }}
+              aria-label={t.language.aria}
+            >
+              <Languages size={14} />
+              {t.language.label}
             </button>
             {SOCIAL_LINKS.map((link) => {
               const isExternal = !link.href.startsWith("mailto:");

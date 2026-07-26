@@ -8,7 +8,7 @@ import {
   type ComponentType,
 } from "react";
 import { usePage, PAGE_ORDER, type PageId } from "@/contexts/PageContext";
-import { useT } from "@/contexts/LocaleContext";
+import { useLocale, useT } from "@/contexts/LocaleContext";
 import { useFullPageScroll } from "@/hooks/useFullPageScroll";
 import { runTransition, clearTransitionStyles } from "@/lib/pageTransitions";
 import { TRANSITION_MS } from "@/lib/anime";
@@ -39,6 +39,7 @@ const PAGES: Record<PageId, ComponentType> = {
  */
 export function PageShell() {
   const { current, transition, direction, navigate } = usePage();
+  const { locale } = useLocale();
   const [displayed, setDisplayed] = useState<PageId>(current);
   const [pending, setPending] = useState<PageId | null>(null);
   const [transitioning, setTransitioning] = useState(false);
@@ -121,9 +122,12 @@ export function PageShell() {
         </div>
       )}
 
-      {/* 进入层 / 当前页：pending 时初始 opacity 0 防 FOUC，runTransition 淡入；key=新页保证重挂载触发各 section 入场动画 */}
+      {/* 进入层 / 当前页：pending 时初始 opacity 0 防 FOUC，runTransition 淡入；
+          key=新页保证重挂载触发各 section 入场动画。
+          key 里带 locale：切换语言时同样重挂载，让新文案带着入场动画出现，
+          而不是原地替换字符串（AnimeText / ScrambleText 的逐字动画也随之重播）。 */}
       <div
-        key={`enter-${pending ?? displayed}`}
+        key={`enter-${pending ?? displayed}-${locale}`}
         ref={enterRef}
         className="absolute inset-0 flex items-center justify-center"
         style={{ opacity: pending !== null ? 0 : 1 }}

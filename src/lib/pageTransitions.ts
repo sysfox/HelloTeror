@@ -29,6 +29,8 @@ import type { TransitionType } from "@/contexts/PageContext";
 export const TRANSITION_DURATIONS: Record<TransitionType, number> = {
   curtain: TRANSITION_MS,
   "zoom-blur": TRANSITION_MS,
+  // 词标需要足够时间被读到，比基准时长长一截
+  "type-wipe": 780,
 };
 
 /**
@@ -44,8 +46,10 @@ export interface TransitionContext {
   exitEl: HTMLElement | null;
   /** 进入层 DOM（新页），可能为 null */
   enterEl: HTMLElement | null;
-  /** curtain 面板（仅 curtain 类型需要） */
+  /** curtain 面板（curtain / type-wipe 需要） */
   curtainPanel: HTMLElement | null;
+  /** 幕布上的超大词标（仅 type-wipe 需要），DOM 上是 curtainPanel 的子级 */
+  curtainLabel: HTMLElement | null;
   /** 过渡完成回调：切换 displayed → pending，解锁滚动 */
   finish: () => void;
 }
@@ -68,7 +72,7 @@ export function runTransition(
     return;
   }
 
-  const { exitEl, enterEl, curtainPanel, finish } = ctx;
+  const { exitEl, enterEl, curtainPanel, curtainLabel, finish } = ctx;
 
   /** 本次切换的总时长与分段点（两段式动画在 HALF 处交接） */
   const TOTAL = TRANSITION_DURATIONS[type];
@@ -148,6 +152,89 @@ export function runTransition(
             ease: EASE.expo,
           },
           0
+        );
+      }
+      break;
+    }
+
+    case "type-wipe": {
+      // 幕布 + 词标：词标是 curtainPanel 的子级，transform 叠加在幕布之上，
+      // 因此给它一个反向位移即得到"字比幕布慢半拍"的视差拖尾，
+      // 且幕布扫出时词标自然随之离场，不会孤零零留在新页上。
+
+      // ── 前半段：旧页淡出 + 幕布扫入 + 词标反向视差入场 ──
+      if (exitEl) {
+        tl.add(
+          exitEl,
+          {
+            opacity: [1, 0],
+            scale: [1, 0.985],
+            duration: HALF,
+            ease: EASE.quart,
+          },
+          0
+        );
+      }
+      if (curtainPanel) {
+        tl.add(
+          curtainPanel,
+          {
+            translateX: [forward ? "-100%" : "100%", "0%"],
+            duration: HALF,
+            ease: EASE.expo,
+          },
+          0
+        );
+      }
+      if (curtainLabel) {
+        tl.add(
+          curtainLabel,
+          {
+            translateX: [forward ? "26%" : "-26%", "0%"],
+            opacity: [0, 1],
+            scale: [1.12, 1],
+            duration: HALF,
+            ease: EASE.expo,
+          },
+          0
+        );
+      }
+
+      // ── 后半段：幕布扫出 + 词标反向拖尾淡出 + 新页淡入 ──
+      if (curtainPanel) {
+        tl.add(
+          curtainPanel,
+          {
+            translateX: ["0%", forward ? "100%" : "-100%"],
+            duration: HALF,
+            ease: EASE.expo,
+          },
+          HALF
+        );
+      }
+      if (curtainLabel) {
+        tl.add(
+          curtainLabel,
+          {
+            translateX: ["0%", forward ? "-26%" : "26%"],
+            opacity: [1, 0],
+            scale: [1, 0.94],
+            duration: HALF,
+            ease: EASE.quart,
+          },
+          HALF
+        );
+      }
+      if (enterEl) {
+        tl.add(
+          enterEl,
+          {
+            opacity: [0, 1],
+            scale: [1.015, 1],
+            duration: HALF,
+            ease: EASE.quart,
+          },
+          HALF
         );
       }
       break;

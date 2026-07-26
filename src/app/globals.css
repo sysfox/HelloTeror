@@ -726,6 +726,26 @@
   background: var(--transition-curtain-bg);
   box-shadow: 0 0 60px rgba(41, 151, 255, 0.35);
 }
+/* type-wipe 词标：印在幕布上的目标页超大页名，随幕布反向视差掠过。
+   opacity:0 是防 FOUC 的初始隐态，由 runTransition 抬升。
+   刻意**不**加入底部 prefers-reduced-motion 白名单：减少动效时 runTransition
+   直接 finish()，幕布仅存在一帧，置 opacity:1 反而会闪一下大字。 */
+.curtain-wordmark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(3rem, 13vw, 11rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  color: var(--text-primary);
+  text-shadow: 0 0 80px var(--accent-glow);
+  opacity: 0;
+  will-change: transform, opacity;
+}
 /* MagneticButton / TiltCard 3D 上下文 */
 .preserve-3d {
   transform-style: preserve-3d;

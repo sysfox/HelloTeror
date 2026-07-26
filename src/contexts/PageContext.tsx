@@ -18,14 +18,19 @@ export type PageId =
   | "blog";
 
 /**
- * 两种 anime.js 驱动的切换动画（kinetic-tech 风格）：
+ * anime.js 驱动的切换动画（kinetic-tech 风格）：
  *  - curtain    强调色幕布横扫覆盖→揭示（两段式，融合站点主色）
  *  - zoom-blur  缩放+模糊交叉淡入淡出（一段式，电影感）
+ *  - type-wipe  幕布上印目标页超大词标，与幕布反向视差掠过（两段式，拍板感）
  *
  * forward / backward 方向由 navigate 时按 PAGE_ORDER 索引判定，
- * 影响 curtain 的覆盖方向。
+ * 影响幕布类切换的覆盖方向。
+ *
+ * 新增类型需同步四处：本联合类型、TRANSITION_CYCLE、
+ * pageTransitions.ts 的 TRANSITION_DURATIONS（Record 完备性会强制）与 runTransition，
+ * 以及 PageShell 里对应的 overlay DOM。
  */
-export type TransitionType = "curtain" | "zoom-blur";
+export type TransitionType = "curtain" | "zoom-blur" | "type-wipe";
 
 /**
  * 页面顺序常量（用于判断 forward / backward 方向以决定 curtain 方向）
@@ -40,10 +45,10 @@ export const PAGE_ORDER: PageId[] = [
 ];
 
 /**
- * 循环序列：两种动画交替，避免连续切换单调。
- * curtain 横扫与 zoom-blur 缩放模糊节奏对比，频率各 1/2。
+ * 循环序列：按顺序轮换，避免连续切换单调。
+ * 排列上让"幕布类"与"非幕布类"交替出现，节奏对比更明显。
  */
-const TRANSITION_CYCLE: TransitionType[] = ["curtain", "zoom-blur"];
+const TRANSITION_CYCLE: TransitionType[] = ["curtain", "zoom-blur", "type-wipe"];
 
 interface PageContextValue {
   current: PageId;

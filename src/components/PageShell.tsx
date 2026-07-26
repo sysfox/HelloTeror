@@ -36,7 +36,7 @@ const PAGES: Record<PageId, ComponentType> = {
  * SPA 页面容器（anime.js 驱动切换）：
  * - 永远只有一个 active page 居中渲染
  * - 切换时 enter 层（新页）与 exit 层（旧页快照）同时存在，runTransition 用 timeline 驱动
- * - 两种切换：curtain 幕布横扫 / zoom-blur 缩放模糊
+ * - 切换类型见 contexts/PageContext 的 TransitionType；幕布类共用同一块面板 DOM
  * - exit 层用 .transition-exit-snapshot 强制子树可见，避免重挂载触发的 FOUC / 动画重播
  * - enter 层修复了旧版 bug（旧版 enter 永不动画）：现在 enter 渲染 pending（新页）
  * - 滚轮 / 触摸 / 方向键切换（useFullPageScroll），transitioning 期间锁定
@@ -51,12 +51,14 @@ export function PageShell() {
     setTransitioning,
   } = usePage();
   const { locale } = useLocale();
+  const t = useT();
   const [displayed, setDisplayed] = useState<PageId>(current);
   const [pending, setPending] = useState<PageId | null>(null);
 
   const exitRef = useRef<HTMLDivElement>(null);
   const enterRef = useRef<HTMLDivElement>(null);
   const curtainRef = useRef<HTMLDivElement>(null);
+  const curtainLabelRef = useRef<HTMLSpanElement>(null);
 
   // current 变化 → 锁定 + 记录 pending（让两层同时渲染）
   useEffect(() => {
@@ -87,6 +89,7 @@ export function PageShell() {
       exitEl: exitRef.current,
       enterEl: enterRef.current,
       curtainPanel: curtainRef.current,
+      curtainLabel: curtainLabelRef.current,
       finish,
     });
 
@@ -120,7 +123,9 @@ export function PageShell() {
     cooldownMs: MAX_TRANSITION_MS + 60,
   });
 
-  const showCurtain = pending !== null && transition === "curtain";
+  // 幕布类切换共用同一块面板 DOM；type-wipe 在面板内额外挂一个超大词标
+  const showCurtain =
+    pending !== null && (transition === "curtain" || transition === "type-wipe");
   const ActivePage = PAGES[pending ?? displayed];
   const ExitingPage = pending !== null ? PAGES[displayed] : null;
 
@@ -153,14 +158,20 @@ export function PageShell() {
         <ActivePage />
       </div>
 
-      {/* curtain 过渡面板：强调色幕布横扫覆盖→揭示 */}
+      {/* 幕布面板：强调色幕布横扫覆盖→揭示；type-wipe 额外印上目标页词标 */}
       {showCurtain && (
         <div
           key={`curtain-${displayed}-to-${pending}`}
           ref={curtainRef}
           className="curtain-panel curtain-panel--accent"
           aria-hidden
-        />
+        >
+          {pending && transition === "type-wipe" && (
+            <span ref={curtainLabelRef} className="curtain-wordmark">
+              {t.wordmark[pending]}
+            </span>
+          )}
+        </div>
       )}
 
       <ScrollHint visible={!transitioning && current === "home"} />

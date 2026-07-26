@@ -15,6 +15,7 @@ import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
 import { SectionHeading } from "@/components/animations/SectionHeading";
 import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
+import { ContributionGraph } from "@/components/animations/ContributionGraph";
 import { useLocale } from "@/contexts/LocaleContext";
 
 function StatCard({
@@ -231,6 +232,17 @@ export function StatsSection() {
               </div>
             ))}
           </StaggerGroup>
+        )}
+
+        {/* 贡献热图：对角波浪点亮。与卡片入场错开，等 count-up 起跑后再铺开 */}
+        {!loading && data?.calendar && (
+          <div className="mt-7">
+            <ContributionGraph
+              calendar={data.calendar}
+              start={start}
+              startDelay={620}
+            />
+          </div>
         )}
 
         {/* Extra inline stats */}

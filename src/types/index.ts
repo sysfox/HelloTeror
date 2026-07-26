@@ -54,6 +54,23 @@ export interface SocialLink {
   icon: string;
 }
 
+/** 贡献热图的一天。level 由 GitHub 的 contributionLevel 枚举映射而来（0=无）。 */
+export interface ContributionDay {
+  /** ISO 日期串（YYYY-MM-DD） */
+  date: string;
+  count: number;
+  level: 0 | 1 | 2 | 3 | 4;
+}
+
+/**
+ * 贡献热图。weeks 为周列表，每周**恒为 7 项**（周日→周六）；
+ * 落在统计窗口外的格子为 null，由服务端补齐，客户端无需再判边界。
+ */
+export interface ContributionCalendar {
+  total: number;
+  weeks: (ContributionDay | null)[][];
+}
+
 /**
  * Raw GitHub stats from the `/api/github/stats` route.
  * Icons / labels are mapped client-side in StatsSection by id;
@@ -74,4 +91,6 @@ export interface GitHubStatsResponse {
   followers: number;
   /** Stars earned across own repos (sum of stargazers_count) */
   stars: number;
+  /** 本年贡献热图（contributionsCollection.contributionCalendar） */
+  calendar: ContributionCalendar;
 }

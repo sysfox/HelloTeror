@@ -60,17 +60,8 @@ export default async function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
-        <OpenPanelComponent
-        clientId="1df61cd0-b9ac-4be9-91e0-5200452771e5"
-        trackScreenViews={true}
-        trackAttributes={true}
-        trackOutgoingLinks={true}
-        sessionReplay={{
-          enabled: true,
-        }}
-        scriptUrl="https://p.trfox.top/https://openpanel.dev/op1.js"
-        apiUrl="https://op.trfox.top/api"
-      />
+        <script defer src="https://umami.trfox.top/script.js" data-website-id="c522847f-2a7f-58fe-87d7-22bf0d4bf765"></script>
+        <script defer src="https://umami.trfox.top/recorder.js" data-website-id="c522847f-2a7f-58fe-87d7-22bf0d4bf765"></script>
       </head>
       <body className="h-full overflow-hidden">
         <LocaleProvider initialLocale={locale}>

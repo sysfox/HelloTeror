@@ -485,7 +485,6 @@ function ScrollHint({ visible }: { visible: boolean }) {
         height="22"
         viewBox="0 0 14 22"
         fill="none"
-        className="breathe-glow"
       >
         <path
           d="M7 1V20M7 20L1 14M7 20L13 14"

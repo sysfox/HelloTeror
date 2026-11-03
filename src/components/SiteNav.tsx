@@ -13,9 +13,6 @@ import { SOCIAL_LINKS } from "@/config/site";
 /** 导航显示顺序直接派生自 PAGE_ORDER（拷贝一份，避免意外改动全局顺序）。文案取 t.nav[id]。 */
 const NAV_LINKS: PageId[] = [...PAGE_ORDER];
 
-/** HUD 序号：01–06 */
-const navIndex = (i: number) => String(i + 1).padStart(2, "0");
-
 function GithubIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
@@ -42,7 +39,7 @@ function SocialIcon({ id }: { id: string }) {
 
 /**
  * 顶部 HUD 导航：固定工业条 + 底部能量细线。
- * 逻辑保持原样：PAGE_ORDER 派生的 NAV_LINKS、t.nav / t.wordmark、主题/语言切换、
+ * 逻辑保持原样：PAGE_ORDER 派生的 NAV_LINKS、t.nav、主题/语言切换、
  * 移动端抽屉、社交链接、anime.js 滑动指示器（locale 变化必须重测距，
  * 因为中文标签更窄，否则指示器会错位）。
  */
@@ -141,7 +138,7 @@ export function SiteNav() {
   return (
     <header className="site-nav fixed top-0 left-0 right-0 z-50 theme-transition">
       <nav className="content-max-width flex items-center justify-between h-12 md:h-14 gap-3">
-        {/* 品牌：切角头像 + 站名 + 当前扇区词标（t.wordmark 随页面变化） */}
+        {/* 品牌：头像 + 站名 */}
         <button
           type="button"
           onClick={() => navigate("home")}
@@ -160,17 +157,8 @@ export function SiteNav() {
             />
           </span>
 
-          <span className="hidden sm:flex flex-col items-start gap-1 leading-none">
-            <span className="text-[13px] font-semibold tracking-[0.16em]">
-              TEROR FOX
-            </span>
-            <span className="hud-label flex items-center gap-1.5 text-[9px]">
-              <span style={{ color: "var(--accent)" }}>VOID</span>
-              <span aria-hidden style={{ opacity: 0.5 }}>
-                {"//"}
-              </span>
-              <span>{t.wordmark[current]}</span>
-            </span>
+          <span className="hidden text-[13px] font-semibold tracking-[0.16em] sm:inline">
+            TEROR FOX
           </span>
         </button>
 
@@ -195,9 +183,6 @@ export function SiteNav() {
                   className="nav-tab"
                   aria-current={active ? "page" : undefined}
                 >
-                  <span className="nav-tab__index" aria-hidden>
-                    {navIndex(i)}
-                  </span>
                   {t.nav[id]}
                 </button>
               </li>
@@ -251,9 +236,6 @@ export function SiteNav() {
         </button>
       </nav>
 
-      {/* 底部能量细线：持续缓慢流动 */}
-      <span aria-hidden className="nav-rule" />
-
       {/* 移动端抽屉：3D 翻落 + 逐项 stagger；关闭时 inert 防止键盘聚焦到隐藏按钮 */}
       <div
         id="site-nav-drawer"
@@ -266,7 +248,7 @@ export function SiteNav() {
         inert={!open}
       >
         <ul className="content-max-width flex flex-col py-4 gap-1">
-          {NAV_LINKS.map((id, i) => {
+          {NAV_LINKS.map((id) => {
             const active = current === id;
             return (
               <li key={id} className="nav-drawer__item">
@@ -279,9 +261,6 @@ export function SiteNav() {
                   className="nav-tab w-full justify-start gap-3"
                   aria-current={active ? "page" : undefined}
                 >
-                  <span className="nav-tab__index" aria-hidden>
-                    {navIndex(i)}
-                  </span>
                   <span>{t.nav[id]}</span>
                   {active && (
                     <span
@@ -289,7 +268,6 @@ export function SiteNav() {
                       className="ml-auto h-1.5 w-1.5"
                       style={{
                         background: "var(--accent)",
-                        boxShadow: "0 0 10px var(--accent-glow)",
                       }}
                     />
                   )}

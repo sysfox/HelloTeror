@@ -164,6 +164,7 @@ const en = {
       "A selection of pinned repositories — from a 1.9k-star blog manager to an AI-powered CMS core.",
     contributor: "contributor",
     seeAll: "See all on GitHub",
+    empty: "Nothing here yet.",
   },
 
   blog: {
@@ -172,6 +173,7 @@ const en = {
     subtitle:
       "Notes from the field — development logs, security write-ups, and occasional reflections.",
     visit: "Visit blog.trfox.top",
+    empty: "Nothing here yet.",
   },
 
   /** config/site.ts 里的链接标签（id → 显示名） */
@@ -335,6 +337,7 @@ const zh: Dictionary = {
       "GitHub 置顶仓库的一部分 —— 从 1.9k star 的博客管理器，到 AI 驱动的 CMS 内核。",
     contributor: "贡献者",
     seeAll: "在 GitHub 上查看全部",
+    empty: "暂无内容。",
   },
 
   blog: {
@@ -343,6 +346,7 @@ const zh: Dictionary = {
     subtitle:
       "来自一线的笔记 —— 开发日志、安全复盘，以及偶尔的胡思乱想。",
     visit: "访问 blog.trfox.top",
+    empty: "暂无内容。",
   },
 
   links: {

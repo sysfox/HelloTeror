@@ -3,7 +3,6 @@
 import { ArrowUpRight } from "lucide-react";
 import type { BlogPost } from "@/types";
 import { SectionHeading } from "@/components/animations/SectionHeading";
-import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 import { useApiData } from "@/hooks/useApiData";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -12,26 +11,22 @@ import { BlogSkeleton } from "@/components/sections/blog/BlogSkeleton";
 import { useReducedMotion } from "@/components/sections/blog/useReducedMotion";
 
 /**
- * Blog — 「归档隧道」。
+ * Blog — 简洁归档列表。
  *
  * 数据层、fallback、空态与外链行为保持原样（useApiData + /api/blog）。
  * 日期仍以 ISO 串存储，客户端用 Intl + UTC 渲染（见 formatPostDate）。
  */
-function EmptySignal() {
+function EmptySignal({ text }: { text: string }) {
   return (
     <div
-      className="border px-4 py-10 text-center font-mono text-[11px] uppercase tracking-[0.24em]"
+      className="border px-4 py-10 text-center text-sm"
       style={{
         borderColor: "var(--border-subtle)",
         background: "var(--surface)",
         color: "var(--text-tertiary)",
       }}
     >
-      <span style={{ color: "var(--accent-2)" }}>{"// NO SIGNAL"}</span>
-      <span className="mx-2" style={{ color: "var(--border-strong)" }}>
-        ·
-      </span>
-      ARCHIVE EMPTY
+      {text}
     </div>
   );
 }
@@ -47,8 +42,6 @@ export function BlogSection() {
       id="blog"
       className="relative isolate w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      {/* 巨型幽灵编号装置（scaffold 锚定 section 顶部 + 内容列右沿，跨页同位） */}
-      <SectionGhostNumber index="05" />
 
       <div
         className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12"
@@ -70,7 +63,7 @@ export function BlogSection() {
         {loading ? (
           <BlogSkeleton />
         ) : posts.length === 0 ? (
-          <EmptySignal />
+          <EmptySignal text={t.blog.empty} />
         ) : (
           <BlogArchive
             posts={posts}
@@ -84,12 +77,12 @@ export function BlogSection() {
           className="mt-6 flex justify-center fade-up-soft"
           style={{ animationDelay: "0.85s" }}
         >
-          <MagneticButton strength={0.32} tilt={0.04}>
+          <MagneticButton strength={0.2} tilt={0.02}>
             <a
               href="https://blog.trfox.top"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border px-3.5 py-2 font-mono text-[10px] uppercase tracking-[0.2em] active:scale-[0.97] theme-transition"
+              className="inline-flex items-center gap-2 border px-3.5 py-2 text-xs transition-colors duration-200 active:scale-[0.97]"
               style={{
                 borderColor: "var(--border-subtle)",
                 background: "var(--surface)",

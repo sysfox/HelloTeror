@@ -24,7 +24,7 @@ export function ProjectList({ projects, contributorLabel }: ProjectListProps) {
         staggerMs={75}
         from="first"
       >
-        {projects.map((project, i) => (
+        {projects.map((project) => (
           <div key={project.id} data-stagger-item role="listitem">
             <a
               href={project.url}
@@ -44,18 +44,6 @@ export function ProjectList({ projects, contributorLabel }: ProjectListProps) {
                 e.currentTarget.style.background = "var(--surface)";
               }}
             >
-              <span
-                className="shrink-0 font-mono text-[10px] tabular-nums tracking-[0.1em]"
-                style={{ color: "var(--accent)" }}
-              >
-                {`P-${String(i + 1).padStart(2, "0")}`}
-              </span>
-              <span
-                aria-hidden
-                className="h-6 w-px shrink-0"
-                style={{ background: "var(--border-strong)" }}
-              />
-
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
                   <span

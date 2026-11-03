@@ -13,7 +13,6 @@ import type { GitHubStatsResponse } from "@/types";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
 import { SectionHeading } from "@/components/animations/SectionHeading";
-import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { ContributionGraph } from "@/components/animations/ContributionGraph";
 import { useLocale } from "@/contexts/LocaleContext";
 import {
@@ -24,7 +23,7 @@ import {
 import styles from "./sections/stats/stats.module.css";
 
 /**
- * 尾部附加读数：沿用 useCountUp 的既有 API，仅换成 HUD 排版。
+ * 尾部附加读数：沿用 useCountUp 的既有 API，改成简洁的数字 + 标签。
  * start 与主仪表同步，保证一屏内所有数字同一时刻起跑。
  */
 function ExtraStat({
@@ -41,7 +40,6 @@ function ExtraStat({
   const v = useCountUp(value, { duration: 1600, start, decimals: 0 });
   return (
     <span className={styles.extra}>
-      <span aria-hidden className={styles.extraKey} />
       <span className={styles.extraValue}>{v.toLocaleString(intlLocale)}</span>
       <span className={styles.extraLabel}>{label}</span>
     </span>
@@ -118,8 +116,6 @@ export function StatsSection() {
       id="stats"
       className="relative isolate w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      {/* 巨型幽灵编号装置（scaffold 锚定 section 顶部 + 内容列右沿，跨页同位） */}
-      <SectionGhostNumber index="03" />
 
       <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
         <SectionHeading index="03" label={t.stats.label} title={t.stats.title} />
@@ -144,12 +140,11 @@ export function StatsSection() {
             staggerMs={90}
             from="center"
           >
-            {STATS.map((stat, i) => (
+            {STATS.map((stat) => (
               <div key={stat.id} data-stagger-item>
                 <TiltCard maxTilt={4} scale={1.02}>
                   <GaugeCard
                     stat={stat}
-                    index={i}
                     start={start}
                     intlLocale={intlLocale}
                   />

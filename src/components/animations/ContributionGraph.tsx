@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { animate, EASE, prefersReducedMotion } from "@/lib/anime";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { ContributionCalendar, ContributionDay } from "@/types";
-import { Brackets } from "@/components/sections/stats/Brackets";
 import styles from "@/components/sections/stats/graph.module.css";
 
 /**
@@ -157,8 +156,6 @@ export function ContributionGraph({
 
   return (
     <div className={styles.panel}>
-      <Brackets size={11} inset={7} />
-
       <div className={styles.header}>
         <div>
           <span className={styles.label}>{t.stats.graphLabel}</span>
@@ -258,11 +255,6 @@ export function ContributionGraph({
                       )
                     )
                   )}
-                </div>
-
-                {/* 扫描带：网格的兄弟节点，不参与入场动画 */}
-                <div aria-hidden className={styles.beamClip}>
-                  <span className={styles.beam} />
                 </div>
               </div>
             </div>

@@ -15,26 +15,9 @@
   height: clamp(430px, 58vh, 600px);
   overflow: hidden;
   border: 1px solid var(--border-subtle);
-  background:
-    radial-gradient(ellipse at 50% 56%, var(--accent-soft), transparent 64%),
-    var(--surface);
+  background: var(--surface);
   perspective: 1500px;
   isolation: isolate;
-}
-
-/* CRT 扫描线覆盖整块舞台（含 3D 层），静态、不拦指针 */
-.stage::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    180deg,
-    transparent 0 2px,
-    rgba(0, 0, 0, 0.18) 2px 3px
-  );
-  opacity: 0.22;
 }
 
 .floorGrid {
@@ -240,11 +223,7 @@
   overflow: hidden;
   padding: 11px 13px 13px;
   border: 1px solid var(--border-subtle);
-  background: linear-gradient(
-    155deg,
-    var(--surface-strong),
-    var(--surface) 62%
-  );
+  background: var(--surface);
   outline: none;
   transition:
     border-color 0.35s ease,
@@ -256,41 +235,12 @@
 .module[data-active="true"],
 .module:focus-visible {
   border-color: var(--accent-border);
-  box-shadow:
-    0 0 0 1px var(--accent-soft),
-    0 22px 60px -26px var(--accent-glow);
-  background: linear-gradient(
-    155deg,
-    var(--accent-soft),
-    var(--surface) 66%
-  );
+  background: var(--surface-hover);
 }
 
 .module:focus-visible {
   outline: 1px solid var(--accent);
   outline-offset: 3px;
-}
-
-/* hover 时自上而下掠过的能量扫描带 */
-.moduleScan {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -34%;
-  height: 34%;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    var(--accent-soft),
-    transparent
-  );
-  opacity: 0;
-}
-
-.module[data-active="true"] .moduleScan {
-  opacity: 1;
-  animation: moduleScan 2.4s linear infinite;
 }
 
 .moduleHead {
@@ -386,8 +336,7 @@
 
 .dashLine {
   stroke-dasharray: 3 10;
-  opacity: 0.75;
-  animation: dashFlow 1.5s linear infinite;
+  opacity: 0.45;
 }
 
 /* ---------- 左下角状态读数 ---------- */

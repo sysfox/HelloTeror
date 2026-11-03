@@ -15,7 +15,6 @@ import {
 import { useLocale } from "@/contexts/LocaleContext";
 import { TECH, TECH_SLOTS } from "./techData";
 import { TechModule } from "./TechModule";
-import { Brackets } from "./Brackets";
 import styles from "./tech.module.css";
 
 /**
@@ -39,7 +38,7 @@ const MAX_ROTATE_X = 5;
 const MAX_ROTATE_Y = 7;
 
 export function TechOrbit() {
-  const { t, intlLocale } = useLocale();
+  const { t } = useLocale();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -153,18 +152,9 @@ export function TechOrbit() {
   }, []);
 
   const active = TECH.find((cat) => cat.id === activeId) ?? null;
-  const nodeCount = active
-    ? active.items.length
-    : TECH.reduce((sum, cat) => sum + cat.items.length, 0);
 
   return (
     <div ref={stageRef} className={styles.stage}>
-      <div aria-hidden className={styles.floorGrid} />
-      <div aria-hidden className={styles.axisLineH} />
-      <div aria-hidden className={styles.axisLineV} />
-      <div aria-hidden className={styles.beam} />
-      <Brackets color="var(--accent-border)" size={14} inset={8} />
-
       <div ref={cameraRef} className={styles.camera}>
         {/* 连接线画在相机内部（z=0 平面），随视角一起倾斜 */}
         <svg
@@ -211,32 +201,8 @@ export function TechOrbit() {
           })}
         </svg>
 
-        {/* 中央线框核心：三道轨道环 + 线框立方体 + 光点 */}
+        {/* 中央只保留一个光点，避免线框立方体抢走注意力 */}
         <div aria-hidden className={styles.core}>
-          <div className={styles.coreGlow} />
-          <div className={styles.coreHalo} />
-          <div className={styles.coreSpin}>
-            <span
-              className={styles.ring}
-              style={{ transform: "rotateX(72deg) rotateZ(10deg)" }}
-            />
-            <span
-              className={styles.ring}
-              style={{ transform: "rotateY(72deg) rotateZ(-10deg)" }}
-            />
-            <span
-              className={styles.ring}
-              style={{ transform: "rotateX(16deg) rotateY(16deg)" }}
-            />
-            <div className={styles.cube}>
-              <span className={`${styles.face} ${styles.faceFront}`} />
-              <span className={`${styles.face} ${styles.faceBack}`} />
-              <span className={`${styles.face} ${styles.faceRight}`} />
-              <span className={`${styles.face} ${styles.faceLeft}`} />
-              <span className={`${styles.face} ${styles.faceTop}`} />
-              <span className={`${styles.face} ${styles.faceBottom}`} />
-            </div>
-          </div>
           <span className={styles.coreDot} />
         </div>
 
@@ -266,7 +232,6 @@ export function TechOrbit() {
                   <div data-orbit-item className={styles.intro}>
                     <TechModule
                       category={cat}
-                      index={i}
                       active={activeId === cat.id}
                       dimmed={activeId !== null && activeId !== cat.id}
                       onActivate={() => setActiveId(cat.id)}
@@ -280,14 +245,10 @@ export function TechOrbit() {
         </div>
       </div>
 
-      {/* 左下角状态读数：显示当前聚焦分类（无聚焦时回落到整组标签） */}
+      {/* 左下角状态读数：当前聚焦分类（无聚焦时回落到整组标签） */}
       <div className={styles.readout}>
-        <span className={styles.readoutKey}>{"// 02"}</span>
         <span className={styles.readoutValue}>
           {active ? t.tech[active.labelKey] : t.tech.label}
-        </span>
-        <span className={styles.readoutMeta}>
-          {nodeCount.toLocaleString(intlLocale)}
         </span>
       </div>
     </div>

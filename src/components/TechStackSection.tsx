@@ -1,14 +1,13 @@
 "use client";
 
 import { SectionHeading } from "@/components/animations/SectionHeading";
-import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { useT } from "@/contexts/LocaleContext";
 import { TechOrbit } from "./sections/tech/TechOrbit";
 import { TechMobileSelector } from "./sections/tech/TechMobileSelector";
 import styles from "./sections/tech/tech.module.css";
 
 /**
- * Tech 页：桌面端是围绕中央线框核心的轨道装置，窄屏退化为
+ * Tech 页：桌面端是围绕中央节点的轨道布局，窄屏退化为
  * 横向 tablist + 明细面板（见 TechMobileSelector）。
  *
  * 内容与数据完全保留：分类/条目仍来自 TECH（TechCategory[]），
@@ -23,9 +22,6 @@ export function TechStackSection() {
       id="tech"
       className="relative isolate w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      {/* 巨型幽灵编号装置（scaffold 锚定 section 顶部 + 内容列右沿，跨页同位） */}
-      <SectionGhostNumber index="02" />
-
       <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
         <SectionHeading index="02" label={t.tech.label} title={t.tech.title} />
         <p
@@ -48,13 +44,10 @@ export function TechStackSection() {
         {/* 尾部「仍在学习」状态行（保留原 moreLine1/2 文案） */}
         <p className={styles.moreLine}>
           <span>{t.tech.moreLine1}</span>
-          <span aria-hidden style={{ color: "var(--accent)" }}>
-            /
+          <span aria-hidden style={{ color: "var(--text-tertiary)" }}>
+            ·
           </span>
           <span>{t.tech.moreLine2}</span>
-          <span aria-hidden className="spin-slow ml-auto">
-            ✦
-          </span>
         </p>
       </div>
     </section>

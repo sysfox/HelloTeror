@@ -8,7 +8,6 @@ import {
 import { useT } from "@/contexts/LocaleContext";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TECH } from "./techData";
-import { Brackets } from "./Brackets";
 import styles from "./tech.module.css";
 
 /**
@@ -100,13 +99,9 @@ export function TechMobileSelector() {
           aria-labelledby={`tech-tab-${active.id}`}
           className={styles.panel}
         >
-          <Brackets size={10} inset={5} />
           <div className={styles.panelHead}>
             <span className={styles.panelTitle}>
               {t.tech[active.labelKey]}
-            </span>
-            <span className={styles.panelCount}>
-              {String(active.items.length).padStart(2, "0")}
             </span>
           </div>
           <ul className={styles.panelList}>

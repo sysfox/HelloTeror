@@ -1,25 +1,26 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { animate, EASE, prefersReducedMotion } from "@/lib/anime";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { ContributionCalendar, ContributionDay } from "@/types";
+import styles from "@/components/sections/stats/graph.module.css";
 
 /**
- * GitHub 贡献热图 + 对角波浪点亮。
+ * GitHub 贡献热图（VOID 版）+ 对角波浪点亮。
  *
  * 动画：按 (week, day) 手算延迟 —— week * WAVE_COL_MS + day * WAVE_ROW_MS，
- * 形成一道自左上向右下倾斜扫过的波，比整块淡入有层次得多。
+ * 形成一道自左上向右下倾斜扫过的波。
  * 这里刻意**不用** anime 的 grid stagger：grid stagger 假定 DOM 为行优先，
  * 而本组件为了让格子成为 .anime-init-children 的**直接子级**（FOUC 类只作用于
  * 直接子级），用 grid-auto-flow: column 排成列优先，两者顺序假设不一致。
- * 手算延迟同时也符合本仓库"动画靠手调毫秒数协调"的惯例。
  *
- * FOUC：网格挂 anime-init-children 置直接子级 opacity:0，
- * globals.css 的 reduced-motion 块已覆盖该类，减少动效时静态显示满图。
+ * 视觉：色阶用 color-mix 从 --accent 派生（随主题变化）；高等级格子带发光；
+ * 覆盖层是与网格**同级**的扫描带（不能作为网格子级，否则会被 anime-init-children
+ * 一起隐藏/缩放）；顶部有月份轴、左侧有星期轴，hover 时右上角给出读数。
  *
  * 数据：weeks 每周恒为 7 项，窗口外为 null（服务端已补齐，见 lib/github.ts）。
- * start 用于等数据就绪后再播，避免空数据触发动画（与 StatsSection 的 count-up 同步）。
+ * start 由 StatsSection 在数据就绪后置 true，动画永不读随机数。
  */
 
 /** 相邻周（列）之间的波前延迟（ms） */
@@ -27,14 +28,24 @@ const WAVE_COL_MS = 16;
 /** 相邻天（行）之间的波前延迟（ms），大于列步长 → 波前向右下倾斜 */
 const WAVE_ROW_MS = 26;
 
+/** 单元格边长 / 间距（px）：与 graph.module.css 中的轴标签定位假设一致 */
+const CELL = 12;
+const GAP = 3;
+const STRIDE = CELL + GAP;
+/** 月份轴高度（px）：星期列用同样的顶部偏移对齐网格 */
+const MONTH_AXIS_H = 16;
+
 /** 各等级格子的填充色：0 用中性面板色，1~4 用强调色递进 */
 const LEVEL_BG: Record<ContributionDay["level"], string> = {
   0: "var(--surface-strong)",
-  1: "color-mix(in oklab, var(--accent) 28%, transparent)",
-  2: "color-mix(in oklab, var(--accent) 50%, transparent)",
-  3: "color-mix(in oklab, var(--accent) 74%, transparent)",
+  1: "color-mix(in oklab, var(--accent) 24%, transparent)",
+  2: "color-mix(in oklab, var(--accent) 46%, transparent)",
+  3: "color-mix(in oklab, var(--accent) 70%, transparent)",
   4: "var(--accent)",
 };
+
+/** 只标周一到周五中的奇数行，避免左侧标签过密（GitHub 同款做法） */
+const WEEKDAY_ROWS = [1, 3, 5] as const;
 
 export function ContributionGraph({
   calendar,
@@ -48,6 +59,7 @@ export function ContributionGraph({
 }) {
   const { t, intlLocale } = useLocale();
   const gridRef = useRef<HTMLDivElement>(null);
+  const [hover, setHover] = useState<ContributionDay | null>(null);
 
   useEffect(() => {
     if (!start) return;
@@ -81,12 +93,59 @@ export function ContributionGraph({
     };
   }, [start, startDelay, calendar]);
 
-  const dateFormatter = new Intl.DateTimeFormat(intlLocale, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
+  // 格式化器按 locale 缓存，避免 hover 引发整图重渲染时反复构造 Intl 实例
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(intlLocale, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      }),
+    [intlLocale]
+  );
+
+  const monthFormatter = useMemo(
+    () => new Intl.DateTimeFormat(intlLocale, { month: "short", timeZone: "UTC" }),
+    [intlLocale]
+  );
+
+  const weekdayLabels = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(intlLocale, {
+      weekday: "short",
+      timeZone: "UTC",
+    });
+    // 2024-01-07 是周日，用它做基准推 0..6
+    return Array.from({ length: 7 }, (_, d) =>
+      fmt.format(new Date(Date.UTC(2024, 0, 7 + d)))
+    );
+  }, [intlLocale]);
+
+  const weeks = calendar.weeks;
+  const gridWidth =
+    weeks.length > 0 ? weeks.length * CELL + (weeks.length - 1) * GAP : 0;
+
+  // 月份轴：取每周第一个非 null 日期，月份变化时打标；相邻标签至少隔 2 列，
+  // 避免跨年窗口开头出现 "DecJan" 叠字。
+  const monthLabels = useMemo(() => {
+    const labels: { col: number; label: string }[] = [];
+    let lastMonth = -1;
+    let lastCol = -99;
+    weeks.forEach((week, col) => {
+      const first = week.find((d): d is ContributionDay => d !== null);
+      if (!first) return;
+      const month = Number(first.date.slice(5, 7));
+      if (month !== lastMonth && col - lastCol >= 2) {
+        lastMonth = month;
+        lastCol = col;
+        labels.push({
+          col,
+          label: monthFormatter.format(new Date(`${first.date}T00:00:00Z`)),
+        });
+      }
+    });
+    return labels;
+  }, [weeks, monthFormatter]);
 
   const tooltip = (day: ContributionDay) => {
     const date = dateFormatter.format(new Date(`${day.date}T00:00:00Z`));
@@ -96,87 +155,131 @@ export function ContributionGraph({
   };
 
   return (
-    // 外层 overflow 容器负责窄屏横向滚动；内层 w-max 与网格同宽，
-    // 使标题与图例正好对齐到网格左右边缘（年初周数少时不会飘到内容列两端）
-    <div className="w-full overflow-x-auto no-scrollbar">
-      <div className="w-max">
-        {/* 标题行：标签 + 总数 */}
-        <div className="flex items-baseline justify-between gap-6 mb-2.5">
-          <span
-            className="text-[10px] uppercase tracking-[0.3em]"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            {t.stats.graphLabel}
-          </span>
-          <span
-            className="text-[11px] font-mono tabular-nums"
-            style={{ color: "var(--text-tertiary)" }}
-          >
+    <div className={styles.panel}>
+      <div className={styles.header}>
+        <div>
+          <span className={styles.label}>{t.stats.graphLabel}</span>
+          <span className={styles.total}>
             {t.stats.graphTotal(calendar.total.toLocaleString(intlLocale))}
           </span>
         </div>
-
-        {/* 网格：列优先铺排（每列一周） */}
-        <div
-          ref={gridRef}
-          className="anime-init-children grid"
-          style={{
-            gridAutoFlow: "column",
-            gridTemplateRows: "repeat(7, minmax(0, 1fr))",
-            gap: "3px",
-          }}
-        >
-          {calendar.weeks.flatMap((week, w) =>
-            week.map((day, d) =>
-              day === null ? (
-                // 窗口外占位：保持网格对齐，但不可见、不参与动画
-                <span
-                  key={`${w}-${d}`}
-                  aria-hidden
-                  className="w-[11px] h-[11px]"
-                />
-              ) : (
-                <span
-                  key={`${w}-${d}`}
-                  data-contrib-cell
-                  title={tooltip(day)}
-                  className="w-[11px] h-[11px] rounded-[2px]"
-                  style={{
-                    background: LEVEL_BG[day.level],
-                    outline:
-                      day.level === 0
-                        ? "1px solid var(--border-subtle)"
-                        : "1px solid var(--accent-border)",
-                    outlineOffset: "-1px",
-                  }}
-                />
-              )
-            )
-          )}
+        <div className={styles.readout}>
+          {hover ? tooltip(hover) : " "}
         </div>
+      </div>
 
-        {/* 图例：少 → 多（对齐到网格右边缘） */}
-        <div
-          className="mt-2 flex items-center justify-end gap-1.5 text-[10px]"
-          style={{ color: "var(--text-tertiary)" }}
-        >
-          <span>{t.stats.graphLess}</span>
-          {([0, 1, 2, 3, 4] as const).map((level) => (
-            <span
-              key={level}
+      {/* 外层 overflow 容器负责窄屏横向滚动；内层 w-max 与网格同宽 */}
+      <div className={`${styles.scroll} overflow-x-auto no-scrollbar`}>
+        <div className="w-max">
+          <div className="flex">
+            {/* 星期轴：只显示 Mon / Wed / Fri，与 7 行网格对齐 */}
+            <div
+              className={styles.weekdays}
+              style={{ marginTop: MONTH_AXIS_H, gap: GAP }}
               aria-hidden
-              className="w-[11px] h-[11px] rounded-[2px]"
-              style={{
-                background: LEVEL_BG[level],
-                outline:
-                  level === 0
-                    ? "1px solid var(--border-subtle)"
-                    : "1px solid var(--accent-border)",
-                outlineOffset: "-1px",
-              }}
-            />
-          ))}
-          <span>{t.stats.graphMore}</span>
+            >
+              {Array.from({ length: 7 }, (_, d) => (
+                <span
+                  key={d}
+                  style={{ height: CELL, lineHeight: `${CELL}px` }}
+                  className={styles.weekday}
+                >
+                  {WEEKDAY_ROWS.includes(d as 1 | 3 | 5)
+                    ? weekdayLabels[d]
+                    : ""}
+                </span>
+              ))}
+            </div>
+
+            <div>
+              {/* 月份轴 */}
+              <div
+                className={styles.months}
+                style={{ width: gridWidth, height: MONTH_AXIS_H }}
+                aria-hidden
+              >
+                {monthLabels.map((m) => (
+                  <span
+                    key={`${m.col}-${m.label}`}
+                    className={styles.month}
+                    style={{ left: m.col * STRIDE }}
+                  >
+                    {m.label}
+                  </span>
+                ))}
+              </div>
+
+              <div
+                className={styles.plot}
+                style={{ width: gridWidth, height: 7 * CELL + 6 * GAP }}
+              >
+                {/* 网格：列优先铺排（每列一周） */}
+                <div
+                  ref={gridRef}
+                  className="anime-init-children grid"
+                  style={{
+                    gridAutoFlow: "column",
+                    gridTemplateRows: `repeat(7, ${CELL}px)`,
+                    gap: GAP,
+                  }}
+                >
+                  {weeks.flatMap((week, w) =>
+                    week.map((day, d) =>
+                      day === null ? (
+                        // 窗口外占位：保持网格对齐，但不可见、不参与动画
+                        <span
+                          key={`${w}-${d}`}
+                          aria-hidden
+                          style={{ width: CELL, height: CELL }}
+                        />
+                      ) : (
+                        <span
+                          key={`${w}-${d}`}
+                          data-contrib-cell
+                          data-level={day.level}
+                          title={tooltip(day)}
+                          onPointerEnter={() => setHover(day)}
+                          onPointerLeave={() => setHover(null)}
+                          className={styles.cell}
+                          style={{
+                            width: CELL,
+                            height: CELL,
+                            background: LEVEL_BG[day.level],
+                            outline:
+                              day.level === 0
+                                ? "1px solid var(--border-subtle)"
+                                : "1px solid var(--accent-border)",
+                            outlineOffset: "-1px",
+                          }}
+                        />
+                      )
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 图例：少 → 多（对齐到网格右边缘） */}
+          <div className={styles.legend}>
+            <span>{t.stats.graphLess}</span>
+            {([0, 1, 2, 3, 4] as const).map((level) => (
+              <span
+                key={level}
+                aria-hidden
+                className={styles.legendCell}
+                style={{
+                  background: LEVEL_BG[level],
+                  outline:
+                    level === 0
+                      ? "1px solid var(--border-subtle)"
+                      : "1px solid var(--accent-border)",
+                  outlineOffset: "-1px",
+                }}
+              />
+            ))}
+            <span>{t.stats.graphMore}</span>
+          </div>
         </div>
       </div>
     </div>

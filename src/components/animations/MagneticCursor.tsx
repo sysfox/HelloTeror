@@ -88,13 +88,13 @@ export function MagneticCursor() {
           width: hovering ? "56px" : "34px",
           height: hovering ? "56px" : "34px",
           borderRadius: "50%",
-          border: `1px solid ${hovering ? "rgba(41,151,255,0.9)" : "rgba(245,245,247,0.55)"}`,
+          border: `1px solid ${hovering ? "var(--accent-border)" : "var(--border-strong)"}`,
           background: hovering
-            ? "radial-gradient(circle, rgba(41,151,255,0.18) 0%, rgba(41,151,255,0) 70%)"
+            ? "radial-gradient(circle, var(--accent-soft) 0%, transparent 70%)"
             : "transparent",
           boxShadow: hovering
-            ? "0 0 24px rgba(41,151,255,0.45)"
-            : "0 0 8px rgba(245,245,247,0.15)",
+            ? "0 0 24px var(--accent-glow)"
+            : "0 0 8px rgba(0,0,0,0.35)",
           opacity: hidden ? 0 : 1,
           transition:
             "width 280ms cubic-bezier(0.16,1,0.3,1), height 280ms cubic-bezier(0.16,1,0.3,1), border-color 280ms ease, background 280ms ease, box-shadow 280ms ease, opacity 240ms ease",
@@ -111,8 +111,8 @@ export function MagneticCursor() {
           width: "6px",
           height: "6px",
           borderRadius: "50%",
-          background: hovering ? "#2997ff" : "#f5f5f7",
-          boxShadow: "0 0 6px rgba(255,255,255,0.6)",
+          background: hovering ? "var(--accent)" : "var(--text-primary)",
+          boxShadow: "0 0 6px var(--accent-glow)",
           opacity: hidden ? 0 : 1,
           transition: "background 240ms ease, opacity 240ms ease",
           willChange: "transform",

@@ -1,16 +1,19 @@
 "use client";
 
-import { SITE_ICP, SITE_START_YEAR, SITE_AUTHOR } from "@/config/site";
+import {
+  SITE_ICP,
+  SITE_LINKS,
+  SITE_START_YEAR,
+  SITE_AUTHOR,
+} from "@/config/site";
+import { useT } from "@/contexts/LocaleContext";
 
 /**
- * 全局底部 Footer：版权 · ICP 备案。
- *
- * 站点链接（Blog/Legacy/Pan/Plog/Status）已移至 Hero 首屏 CTA 下方的
- * 带图标 pill chips，此处仅保留版权与 ICP 备案（常驻符合备案规范）。
- * 作为 page.tsx flex 列布局的最后一项（shrink-0），自然占据底部高度。
- * 极小字号 + 低对比度，不抢视觉。
+ * 站点页脚（简化版）：版权 + ICP + 其他站点链接。
+ * 去掉跑马灯、坐标读数与 HUD 状态灯，保持单行、可扫读。
  */
 export function SiteFooter() {
+  const t = useT();
   const year = new Date().getFullYear();
   const copyright =
     year > SITE_START_YEAR ? `${SITE_START_YEAR}–${year}` : `${year}`;
@@ -21,26 +24,45 @@ export function SiteFooter() {
       style={{ animationDelay: "0.6s" }}
     >
       <div
-        className="content-max-width flex items-center justify-center h-7 gap-3 text-[10px] font-mono tabular-nums"
+        className="content-max-width flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3 text-[11px]"
         style={{ color: "var(--text-tertiary)" }}
       >
-        {/* 版权 */}
-        <span>
-          © {copyright} {SITE_AUTHOR}
-        </span>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="truncate">
+            © {copyright} {SITE_AUTHOR}
+          </span>
+          <span aria-hidden style={{ opacity: 0.4 }}>
+            ·
+          </span>
+          <a
+            href={SITE_ICP.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-link shrink-0 active:scale-[0.96]"
+          >
+            {SITE_ICP.number}
+          </a>
+        </div>
 
-        {/* 分隔符 + ICP 备案 */}
-        <span aria-hidden className="opacity-40">
-          ·
-        </span>
-        <a
-          href={SITE_ICP.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="footer-link active:scale-[0.96]"
-        >
-          {SITE_ICP.number}
-        </a>
+        <nav className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          {SITE_LINKS.map((link) => (
+            <a
+              key={link.id}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-link transition-colors duration-200"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "";
+              }}
+            >
+              {t.links[link.id]}
+            </a>
+          ))}
+        </nav>
       </div>
     </footer>
   );

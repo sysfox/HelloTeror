@@ -1,79 +1,19 @@
 "use client";
 
-import {
-  Code2,
-  Layers,
-  Server,
-  Database,
-  Wrench,
-  type LucideIcon,
-} from "lucide-react";
-import type { TechCategory } from "@/types";
-import { StaggerGroup } from "@/components/animations/StaggerGroup";
-import { TiltCard } from "@/components/animations/TiltCard";
 import { SectionHeading } from "@/components/animations/SectionHeading";
-import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { useT } from "@/contexts/LocaleContext";
+import { TechOrbit } from "./sections/tech/TechOrbit";
+import { TechMobileSelector } from "./sections/tech/TechMobileSelector";
+import styles from "./sections/tech/tech.module.css";
 
-const TECH: TechCategory[] = [
-  {
-    id: "langs",
-    labelKey: "catLangs",
-    icon: "code",
-    items: [
-      { name: "TypeScript", primary: true },
-      { name: "Python", primary: true },
-    ],
-  },
-  {
-    id: "frontend",
-    labelKey: "catFrontend",
-    icon: "layers",
-    items: [{ name: "React" }, { name: "Next.js" }],
-  },
-  {
-    id: "backend",
-    labelKey: "catBackend",
-    icon: "server",
-    items: [
-      { name: "NestJS" },
-      { name: "Node.js" },
-      { name: "FastAPI" },
-    ],
-  },
-  {
-    id: "infra",
-    labelKey: "catInfra",
-    icon: "database",
-    items: [
-      { name: "Docker" },
-      { name: "Redis" },
-      { name: "PostgreSQL" },
-      { name: "MongoDB" },
-      { name: "MariaDB" },
-    ],
-  },
-  {
-    id: "tools",
-    labelKey: "catTools",
-    icon: "wrench",
-    items: [
-      { name: "VS Code" },
-      { name: "Cursor" },
-      { name: "macOS" },
-      { name: "Ubuntu" },
-    ],
-  },
-];
-
-const ICONS: Record<string, LucideIcon> = {
-  code: Code2,
-  layers: Layers,
-  server: Server,
-  database: Database,
-  wrench: Wrench,
-};
-
+/**
+ * Tech 页：桌面端是围绕中央节点的轨道布局，窄屏退化为
+ * 横向 tablist + 明细面板（见 TechMobileSelector）。
+ *
+ * 内容与数据完全保留：分类/条目仍来自 TECH（TechCategory[]），
+ * 文案仍走字典。两侧同时挂载、用 CSS 断点切换，避免 JS 媒体查询
+ * 在 SSR 首帧产生水合不一致；隐藏侧不产生可见动画。
+ */
 export function TechStackSection() {
   const t = useT();
 
@@ -82,11 +22,7 @@ export function TechStackSection() {
       id="tech"
       className="relative isolate w-full h-full flex items-center justify-center px-5 sm:px-6"
     >
-      {/* 巨型幽灵编号装置（scaffold 锚定 section 顶部 + 内容列右沿，跨页同位） */}
-      <SectionGhostNumber index="02" />
-
       <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
-        {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
         <SectionHeading index="02" label={t.tech.label} title={t.tech.title} />
         <p
           className="fade-up-soft text-sm sm:text-base mb-6"
@@ -95,125 +31,24 @@ export function TechStackSection() {
           {t.tech.subtitle}
         </p>
 
-        {/* 分类卡片：交错入场 + 3D 倾斜 */}
-        <StaggerGroup
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"
-          startDelay={480}
-          staggerMs={90}
-          from="center"
-        >
-          {TECH.map((cat) => {
-            const Icon = ICONS[cat.icon] ?? Code2;
-            return (
-              <div key={cat.id} data-stagger-item>
-                <TiltCard maxTilt={7} scale={1.03}>
-                  <div
-                    className="group relative rounded-2xl border p-4 transition-colors duration-500 theme-transition"
-                    style={{
-                      borderColor: "var(--border-subtle)",
-                      background: "var(--surface)",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.borderColor =
-                        "var(--accent-border)";
-                      (e.currentTarget as HTMLElement).style.background =
-                        "var(--accent-soft)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.borderColor =
-                        "var(--border-subtle)";
-                      (e.currentTarget as HTMLElement).style.background =
-                        "var(--surface)";
-                    }}
-                  >
-                    <div
-                      aria-hidden
-                      className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                      style={{
-                        background:
-                          "radial-gradient(circle at 50% 0%, var(--accent-soft), transparent 70%)",
-                      }}
-                    />
+        {/* 桌面：3D 轨道阵列 */}
+        <div className="hidden lg:block">
+          <TechOrbit />
+        </div>
 
-                    <div className="relative flex items-center gap-2.5 mb-3">
-                      <span
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg border"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, var(--accent-soft), var(--surface))",
-                          borderColor: "var(--accent-border)",
-                          color: "var(--accent)",
-                        }}
-                      >
-                        <Icon size={16} />
-                      </span>
-                      <h3
-                        className="text-sm font-medium"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {t.tech[cat.labelKey]}
-                      </h3>
-                    </div>
+        {/* 窄屏：分类选择器 + 面板 */}
+        <div className="lg:hidden">
+          <TechMobileSelector />
+        </div>
 
-                    <ul className="relative flex flex-wrap gap-1.5">
-                      {cat.items.map((item) => (
-                        <li
-                          key={item.name}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs transition-all duration-200 theme-transition active:scale-[0.96]"
-                          style={{
-                            borderColor: "var(--border-subtle)",
-                            background: "var(--surface-strong)",
-                            color: "var(--text-secondary)",
-                          }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.borderColor =
-                              "var(--accent-border)";
-                            (e.currentTarget as HTMLElement).style.color =
-                              "var(--text-primary)";
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.borderColor =
-                              "var(--border-subtle)";
-                            (e.currentTarget as HTMLElement).style.color =
-                              "var(--text-secondary)";
-                          }}
-                        >
-                          {item.name}
-                          {item.primary && (
-                            <span
-                              className="text-[9px] font-mono"
-                              style={{ color: "var(--accent)" }}
-                            >
-                              {t.tech.notePrimary}
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </TiltCard>
-              </div>
-            );
-          })}
-
-          {/* Decorative "more" card */}
-          <div data-stagger-item>
-            <div
-              className="rounded-2xl border border-dashed p-4 flex flex-col items-center justify-center text-center min-h-[140px]"
-              style={{ borderColor: "var(--border-subtle)" }}
-            >
-              <p
-                className="text-xs"
-                style={{ color: "var(--text-tertiary)" }}
-              >
-                {t.tech.moreLine1}
-                <br />
-                {t.tech.moreLine2}
-              </p>
-              <span className="mt-2 text-xl spin-slow inline-block">✦</span>
-            </div>
-          </div>
-        </StaggerGroup>
+        {/* 尾部「仍在学习」状态行（保留原 moreLine1/2 文案） */}
+        <p className={styles.moreLine}>
+          <span>{t.tech.moreLine1}</span>
+          <span aria-hidden style={{ color: "var(--text-tertiary)" }}>
+            ·
+          </span>
+          <span>{t.tech.moreLine2}</span>
+        </p>
       </div>
     </section>
   );

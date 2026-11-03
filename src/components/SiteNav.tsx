@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { Menu, X, Mail, Sun, Moon, Languages } from "lucide-react";
 import { animate, EASE, prefersReducedMotion } from "@/lib/anime";
 import { cn } from "@/lib/utils";
-import { usePage, type PageId } from "@/contexts/PageContext";
+import { usePage, PAGE_ORDER, type PageId } from "@/contexts/PageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLocale } from "@/contexts/LocaleContext";
 import Image from "next/image";
 import { SOCIAL_LINKS } from "@/config/site";
 
-/** 导航显示顺序（与 PAGE_ORDER 一致但独立声明，允许两者将来分化）。文案取 t.nav[id]。 */
-const NAV_LINKS: PageId[] = ["home", "about", "tech", "stats", "projects", "blog"];
+/** 导航显示顺序直接派生自 PAGE_ORDER（拷贝一份，避免意外改动全局顺序）。文案取 t.nav[id]。 */
+const NAV_LINKS: PageId[] = [...PAGE_ORDER];
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -33,10 +33,16 @@ function BiliBiliIcon({ className }: { className?: string }) {
 function SocialIcon({ id }: { id: string }) {
   if (id === "github") return <GithubIcon className="w-4 h-4" />;
   if (id === "bilibili") return <BiliBiliIcon className="w-4 h-4" />;
-  if (id === "email") return <Mail size={15} />;
+  if (id === "email") return <Mail size={14} />;
   return null;
 }
 
+/**
+ * 顶部 HUD 导航：固定工业条 + 底部能量细线。
+ * 逻辑保持原样：PAGE_ORDER 派生的 NAV_LINKS、t.nav、主题/语言切换、
+ * 移动端抽屉、社交链接、anime.js 滑动指示器（locale 变化必须重测距，
+ * 因为中文标签更窄，否则指示器会错位）。
+ */
 export function SiteNav() {
   const { current, navigate } = usePage();
   const { theme, toggleTheme } = useTheme();
@@ -47,9 +53,9 @@ export function SiteNav() {
   const indicatorRef = useRef<HTMLSpanElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  // 滑动指示器：current 变化时 anime.js 把 accent 圆点滑到激活 tab 中心；
-  // 首次定位 / reduced-motion 直接 snap。translateX(-50%) 让圆点居中于 left 锚点。
-  // locale 也是依赖：切换语言后 tab 宽度变化，需重新测距，否则圆点错位。
+  // 滑动指示器：current 变化时 anime.js 把扫描线滑到激活 tab 中心；
+  // 首次定位 / reduced-motion 直接 snap。translateX(-50%) 让扫描线居中于 left 锚点。
+  // locale 也是依赖：切换语言后 tab 宽度变化，需重新测距，否则扫描线错位。
   useEffect(() => {
     const ul = ulRef.current;
     const ind = indicatorRef.current;
@@ -101,36 +107,68 @@ export function SiteNav() {
     return () => window.removeEventListener("resize", reposition);
   }, [current]);
 
+  // 抽屉打开时支持 Esc 关闭（键盘可达性）
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const socialLink = (link: (typeof SOCIAL_LINKS)[number], compact: boolean) => {
+    const isExternal = !link.href.startsWith("mailto:");
+    return (
+      <a
+        key={link.id}
+        href={link.href}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        className={cn("hud-icon-btn", compact ? "w-[30px] px-0" : "gap-2 px-2.5")}
+        aria-label={t.links[link.id]}
+        title={t.links[link.id]}
+      >
+        <SocialIcon id={link.id} />
+        {!compact && <span className="text-[10px]">{t.links[link.id]}</span>}
+      </a>
+    );
+  };
+
   return (
     <header className="site-nav fixed top-0 left-0 right-0 z-50 theme-transition">
-      <nav className="content-max-width flex items-center justify-between h-12 md:h-14">
-        {/* Logo */}
+      <nav className="content-max-width flex items-center justify-between h-12 md:h-14 gap-3">
+        {/* 品牌：头像 + 站名 */}
         <button
           type="button"
           onClick={() => navigate("home")}
-          className="flex items-center gap-2 font-medium tracking-tight group theme-transition"
+          className="group flex items-center gap-2.5 theme-transition"
           style={{ color: "var(--text-primary)" }}
           aria-label={t.a11y.homeLink}
         >
-          <Image
-            src="https://avatars.githubusercontent.com/u/99103591?v=4"
-            alt="Teror Fox"
-            width={32}
-            height={32}
-            loading="lazy"
-            className="w-8 h-8 rounded-full object-cover"             
-          />
+          <span className="nav-mark">
+            <Image
+              src="https://avatars.githubusercontent.com/u/99103591?v=4"
+              alt=""
+              width={32}
+              height={32}
+              loading="lazy"
+              unoptimized
+            />
+          </span>
 
-          <span className="hidden sm:inline text-sm">Teror Fox</span>
+          <span className="hidden text-[13px] font-semibold tracking-[0.16em] sm:inline">
+            TEROR FOX
+          </span>
         </button>
 
-        {/* Desktop tabs：单一滑动 accent 指示器，current 变化时 anime.js 滑动 */}
-        <ul ref={ulRef} className="relative hidden md:flex items-center gap-1 text-sm">
+        {/* 桌面导航：mono 序号 + 标签，单一滑动扫描指示器 */}
+        <ul ref={ulRef} className="relative hidden md:flex items-center gap-0.5">
           <span
             ref={indicatorRef}
             aria-hidden
-            className="pointer-events-none absolute -bottom-0.5 w-1 h-1 rounded-full bg-[var(--accent)]"
-            style={{ left: 0, transform: "translateX(-50%)", opacity: 0 }}
+            className="nav-indicator"
+            style={{ left: 0, bottom: -9, opacity: 0 }}
           />
           {NAV_LINKS.map((id, i) => {
             const active = current === id;
@@ -142,12 +180,7 @@ export function SiteNav() {
                   }}
                   type="button"
                   onClick={() => navigate(id)}
-                  className={cn(
-                    "relative px-3 py-1.5 rounded-full transition-colors duration-300 theme-transition",
-                    active
-                      ? "text-[var(--text-primary)] bg-[var(--surface-strong)]"
-                      : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
-                  )}
+                  className="nav-tab"
                   aria-current={active ? "page" : undefined}
                 >
                   {t.nav[id]}
@@ -157,155 +190,115 @@ export function SiteNav() {
           })}
         </ul>
 
-        {/* Desktop actions: theme + socials */}
-        <div className="hidden md:flex items-center gap-2">
+        {/* 桌面操作区：主题 / 语言 / 社交 */}
+        <div className="hidden md:flex items-center gap-1.5">
           <button
             type="button"
             onClick={toggleTheme}
-            className="theme-toggle inline-flex items-center justify-center w-9 h-9 rounded-full border theme-transition"
-            style={{
-              borderColor: "var(--border-subtle)",
-              background: "var(--surface)",
-              color: "var(--text-tertiary)",
-            }}
+            className="theme-toggle hud-icon-btn w-[30px] px-0"
             aria-label={theme === "dark" ? t.a11y.toLight : t.a11y.toDark}
             title={theme === "dark" ? t.a11y.themeLight : t.a11y.themeDark}
           >
-            {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            {theme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
           </button>
           {/* 语言切换：label 用目标语言自身书写（中文 / EN），无需图标即可辨识 */}
           <button
             type="button"
             onClick={toggleLocale}
-            className="theme-toggle inline-flex items-center justify-center min-w-9 h-9 px-2.5 rounded-full border text-[11px] font-mono theme-transition"
-            style={{
-              borderColor: "var(--border-subtle)",
-              background: "var(--surface)",
-              color: "var(--text-tertiary)",
-            }}
+            className="hud-icon-btn"
             aria-label={t.language.aria}
             title={t.language.aria}
           >
             {t.language.label}
           </button>
-          {SOCIAL_LINKS.map((link) => {
-            const isExternal = !link.href.startsWith("mailto:");
-            return (
-              <a
-                key={link.id}
-                href={link.href}
-                target={isExternal ? "_blank" : undefined}
-                rel={isExternal ? "noopener noreferrer" : undefined}
-                className="inline-flex items-center justify-center w-9 h-9 rounded-full border theme-transition"
-                style={{
-                  borderColor: "var(--border-subtle)",
-                  background: "var(--surface)",
-                  color: "var(--text-tertiary)",
-                }}
-                aria-label={t.links[link.id]}
-              >
-                <SocialIcon id={link.id} />
-              </a>
-            );
-          })}
+          {/* 社交图标只在 lg 显示：md 宽度下导航 + 品牌 + 操作区会挤爆 */}
+          <div className="hidden lg:flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className="mx-1 h-4 w-px"
+              style={{ background: "var(--border-subtle)" }}
+            />
+            {SOCIAL_LINKS.map((link) => socialLink(link, true))}
+          </div>
         </div>
 
-        {/* Mobile toggle */}
+        {/* 移动端开关 */}
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="md:hidden inline-flex items-center justify-center w-9 h-9 -mr-2 theme-transition"
-          style={{ color: "var(--text-primary)" }}
+          className="hud-icon-btn md:hidden px-0"
+          style={{ height: 36, width: 36 }}
           aria-label={open ? t.a11y.closeMenu : t.a11y.openMenu}
           aria-expanded={open}
+          aria-controls="site-nav-drawer"
         >
-          {open ? <X size={18} /> : <Menu size={18} />}
+          {open ? <X size={16} /> : <Menu size={16} />}
         </button>
       </nav>
 
-      {/* Mobile menu */}
+      {/* 移动端抽屉：3D 翻落 + 逐项 stagger；关闭时 inert 防止键盘聚焦到隐藏按钮 */}
       <div
-        className={cn(
-          "md:hidden overflow-hidden transition-[max-height,opacity] duration-400 ease-out theme-transition",
-          open
-            ? "max-h-[32rem] opacity-100 border-t border-[var(--border-subtle)]"
-            : "max-h-0 opacity-0"
-        )}
+        id="site-nav-drawer"
+        className={cn("nav-drawer md:hidden border-t", open && "is-open")}
         style={{
+          borderColor: "var(--border-subtle)",
           background: "var(--header-bg)",
-          backdropFilter: "blur(12px)",
+          backdropFilter: "blur(14px)",
         }}
+        inert={!open}
       >
-        <ul className="content-max-width flex flex-col py-3 gap-1">
+        <ul className="content-max-width flex flex-col py-4 gap-1">
           {NAV_LINKS.map((id) => {
             const active = current === id;
             return (
-              <li key={id}>
+              <li key={id} className="nav-drawer__item">
                 <button
                   type="button"
                   onClick={() => {
                     navigate(id);
                     setOpen(false);
                   }}
-                  className={cn(
-                    "w-full text-left px-3 py-2.5 rounded-lg text-base transition-colors theme-transition",
-                    active
-                      ? "bg-[var(--surface-strong)]"
-                      : "hover:bg-[var(--surface-hover)]"
-                  )}
-                  style={{
-                    color: active ? "var(--text-primary)" : "var(--text-tertiary)",
-                  }}
+                  className="nav-tab w-full justify-start gap-3"
+                  aria-current={active ? "page" : undefined}
                 >
-                  <span className="inline-flex items-center gap-2">
-                    {active && (
-                      <span
-                        className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]"
-                        aria-hidden
-                      />
-                    )}
-                    {t.nav[id]}
-                  </span>
+                  <span>{t.nav[id]}</span>
+                  {active && (
+                    <span
+                      aria-hidden
+                      className="ml-auto h-1.5 w-1.5"
+                      style={{
+                        background: "var(--accent)",
+                      }}
+                    />
+                  )}
                 </button>
               </li>
             );
           })}
-          <li className="mt-2 pt-2 border-t border-[var(--border-subtle)] flex items-center gap-2 px-1 flex-wrap">
+          <li
+            className="nav-drawer__item mt-3 flex flex-wrap items-center gap-1.5 pt-3"
+            style={{ borderTop: "1px solid var(--border-subtle)" }}
+          >
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-transition"
-              style={{ color: "var(--text-tertiary)" }}
+              className="hud-icon-btn gap-2 px-2.5"
             >
-              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-              {theme === "dark" ? t.a11y.themeLight : t.a11y.themeDark}
+              {theme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
+              <span className="text-[10px]">
+                {theme === "dark" ? t.a11y.themeLight : t.a11y.themeDark}
+              </span>
             </button>
             <button
               type="button"
               onClick={toggleLocale}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-transition"
-              style={{ color: "var(--text-tertiary)" }}
+              className="hud-icon-btn gap-2 px-2.5"
               aria-label={t.language.aria}
             >
-              <Languages size={14} />
-              {t.language.label}
+              <Languages size={13} />
+              <span className="text-[10px]">{t.language.label}</span>
             </button>
-            {SOCIAL_LINKS.map((link) => {
-              const isExternal = !link.href.startsWith("mailto:");
-              return (
-                <a
-                  key={link.id}
-                  href={link.href}
-                  target={isExternal ? "_blank" : undefined}
-                  rel={isExternal ? "noopener noreferrer" : undefined}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm theme-transition"
-                  style={{ color: "var(--text-tertiary)" }}
-                >
-                  <SocialIcon id={link.id} />
-                  {t.links[link.id]}
-                </a>
-              );
-            })}
+            {SOCIAL_LINKS.map((link) => socialLink(link, false))}
           </li>
         </ul>
       </div>

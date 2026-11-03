@@ -6,13 +6,22 @@ import {
   type CSSProperties,
   type ElementType,
 } from "react";
-import { animate, stagger, EASE, prefersReducedMotion } from "@/lib/anime";
+import {
+  animate,
+  stagger,
+  EASE,
+  prefersReducedMotion,
+  type JSAnimation,
+} from "@/lib/anime";
 
 /**
- * 逐字揭示文字：将文本拆为字符 <span data-char>，用 anime.js 做
- * 透明度 + 位移 + 旋转 + 模糊的交错入场。
+ * 逐字「材质化」入场（VOID PROTOCOL）：
+ *  - 主轴：Z 轴从深处（translateZ(-depth)）拉回 + 模糊对焦 + 位移/旋转收敛，
+ *    让字符像从体积黑暗里被镜头拉出来，而不是简单的 fade-up
+ *  - 不叠加色差幽灵层：此前的青/洋红错位重影会被读成「字体损坏」，已移除；
+ *    标题只保留干净的逐字纵深入场，视觉重点交回背景 3D 场景
  *
- * FOUC 策略：父级挂 anime-init-children，CSS 先把直接子级（字符 span）
+ * FOUC 策略：父级挂 anime-init-children，CSS 先把直接子级（字符 wrapper）
  * 置 opacity:0；动画首帧在不可见状态下写入 transform/filter 起始值，无闪烁。
  * 命中 prefers-reduced-motion 时跳过动画，CSS 兜底直接显示。
  *
@@ -41,6 +50,8 @@ type AnimeTextProps = {
   trigger?: "mount" | "viewport";
   /** viewport 触发阈值 0~1 */
   threshold?: number;
+  /** 入场景深起始（px，沿 Z 轴后退），默认 120 */
+  depth?: number;
 };
 
 export function AnimeText({
@@ -57,6 +68,7 @@ export function AnimeText({
   blur = 12,
   trigger = "mount",
   threshold = 0.3,
+  depth = 120,
 }: AnimeTextProps) {
   const Tag = (as ?? "span") as ElementType;
   const ref = useRef<HTMLElement>(null);
@@ -66,23 +78,41 @@ export function AnimeText({
     const el = ref.current;
     if (!el) return;
 
+    const anims: JSAnimation[] = [];
+
     const play = () => {
       const chars = el.querySelectorAll<HTMLElement>("[data-char]");
       if (!chars.length) return;
-      animate(chars, {
-        opacity: [0, 1],
-        translateY: [y, 0],
-        rotateZ: [rotate, 0],
-        filter: [`blur(${blur}px)`, "blur(0px)"],
-        delay: stagger(staggerMs, { from, start: delay }),
-        duration,
-        ease: EASE.expo,
-      });
+
+      const delayFn = stagger(staggerMs, { from, start: delay });
+
+      // 主轴：整字从深处拉回 + 对焦
+      anims.push(
+        animate(chars, {
+          opacity: [0, 1],
+          translateY: [y, 0],
+          translateZ: [-depth, 0],
+          rotateZ: [rotate, 0],
+          filter: [`blur(${blur}px)`, "blur(0px)"],
+          delay: delayFn,
+          duration,
+          ease: EASE.expo,
+          // 结束后撤掉 blur(0px)：inline filter 会永久建立 backdrop root
+          onComplete: () => {
+            chars.forEach((c) => {
+              c.style.filter = "";
+            });
+          },
+        })
+      );
     };
 
     if (trigger === "mount") {
       const raf = requestAnimationFrame(play);
-      return () => cancelAnimationFrame(raf);
+      return () => {
+        cancelAnimationFrame(raf);
+        anims.forEach((a) => a.revert());
+      };
     }
 
     const observer = new IntersectionObserver(
@@ -95,26 +125,33 @@ export function AnimeText({
       { threshold, rootMargin: "0px 0px -10% 0px" }
     );
     observer.observe(el);
-    return () => observer.disconnect();
-  }, [trigger, threshold, text, staggerMs, delay, from, duration, y, rotate, blur]);
+    return () => {
+      observer.disconnect();
+      anims.forEach((a) => a.revert());
+    };
+  }, [trigger, threshold, text, staggerMs, delay, from, duration, y, rotate, blur, depth]);
 
   return (
     <Tag
       ref={ref}
       className={`anime-init-children ${className}`}
-      style={style}
+      style={{ perspective: "1000px", ...style }}
       aria-label={text}
     >
-      {Array.from(text).map((ch, i) => (
-        <span
-          key={i}
-          data-char
-          aria-hidden="true"
-          className="inline-block whitespace-pre"
-        >
-          {ch === " " ? "\u00A0" : ch}
-        </span>
-      ))}
+      {Array.from(text).map((ch, i) => {
+        const display = ch === " " ? "\u00A0" : ch;
+        return (
+          <span
+            key={i}
+            data-char
+            aria-hidden="true"
+            className="relative inline-block whitespace-pre"
+            style={{ willChange: "transform, opacity, filter" }}
+          >
+            {display}
+          </span>
+        );
+      })}
     </Tag>
   );
 }

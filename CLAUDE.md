@@ -112,7 +112,6 @@ Each of the five non-home sections looks like:
 
 ```tsx
 <section id="stats" className="relative isolate w-full h-full flex items-center justify-center px-5 sm:px-6">
-  <SectionGhostNumber index="03" />          {/* needs the parent's `isolate` for its -z-10 */}
   <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
     <SectionHeading index="03" label={t.stats.label} title={t.stats.title} />
     <StaggerGroup ...>{items.map(i => <div key={i.id} data-stagger-item>…</div>)}</StaggerGroup>
@@ -120,7 +119,7 @@ Each of the five non-home sections looks like:
 </section>
 ```
 
-`SectionGhostNumber` carries its own scaffold (matching `px-5 sm:px-6` + `max-w-5xl`) so the giant background numeral lands at identical coordinates across pages regardless of content height — keep the section's padding and max-width in sync with it. `StaggerGroup` children must be **direct** children marked `data-stagger-item` (the FOUC class only hides direct children).
+The visual language was deliberately simplified: heavy HUD decoration (giant ghost numerals, corner brackets, scanlines, terminal blocks, gauge rings, 3D hangar/carousel, timeline spine) is dormant, and content sits on plain bordered surfaces. `StaggerGroup` children must be **direct** children marked `data-stagger-item` (the FOUC class only hides direct children).
 
 `components/*Section.tsx` are the page-level compositions (they own `useT()`/`useApiData` and the section scaffold). Page-specific subviews live in `components/sections/<page>/` — `about/`, `blog/`, `hero/`, `projects/`, `stats/`, `tech/` — with `stats` and `tech` also using CSS modules (`stats.module.css`, `graph.module.css`, `tech.module.css`) for structural and pseudo-element styling. Colors inside those modules still come from the CSS tokens; keep the inline-style rule for simple color/hover overrides.
 
@@ -137,7 +136,7 @@ It has a **three-tier fallback** — never let the page go blank:
 2. `VgpuField` — WebGPU 全屏体积星云 (`vgpu` + `@vgpu/wgsl/prepare`). WGSL is an **inline template string** in `scene-shaders.ts`; do not `import "./x.wgsl"` because no WGSL loader is configured. Resources are pushed to a LIFO disposer stack so strict-mode double mounts cannot leave a duplicate surface. Any init/compile/frame/device-lost failure calls `onFail` and permanently switches to tier 3.
 3. `ThreeField` — React Three Fiber fallback (`three` + `@react-three/fiber` + `@react-three/drei`), per-mood wireframe geometry, instanced repeated objects, `frameloop="demand"` under reduced motion.
 
-`ThreeUILayer` adds a per-page shader accent from `@designcodeio/threeui` (`OrbitalSphereBackground`, `StreamConvergenceBackground`, `DotMatrixBackground`, `RibbonFieldBackground`, `BellFieldBackground`, `EmeraldHorizonBackground`). **Only asset-free components** (inline shader + own canvas) are used; the Neuform/iframe components (ConstellationField / DataField / NebulaBackground) pull Tailwind CDN, GSAP, Google Fonts and Supabase images and are intentionally excluded. One accent is mounted at a time; on page change the old layer stays 620ms for a crossfade. The layer is dimmed via inline `--scene-ui-opacity` + radial mask; a mobile-only `.scene-scrim` in `SCENE_CSS` further darkens the shader core below 768px so body copy stays readable.
+`SceneRoot` also dims its whole subtree (`opacity` ≈ 0.18 dark / 0.14 light) so the 3D field reads as a background texture rather than competing with content; page-transition overlays live outside it and keep full strength. `ThreeUILayer` (the per-page ThreeUI shader accents) is currently **not mounted**; the file remains as dormant reference. Its asset-free component list is still the only acceptable subset if it is ever re-enabled (the Neuform/iframe variants pull Tailwind CDN, GSAP, Google Fonts and Supabase images).
 
 `contracts.ts` is the shared palette/geometry contract (`SCENE_MOODS`, `SceneMood`, `ScenePointer`). Sections do **not** import the scene; they only read CSS tokens. `useSceneTelemetry` owns pointer damping, transition pulse and visibility with rAF, so the React tree does not re-render per frame.
 
@@ -159,7 +158,7 @@ Do not add a second effect that animates the scene layer's opacity/scale — spl
 - `three@0.187` ships without bundled `.d.ts` and the repo deliberately does not add `@types/three`; `ThreeField.tsx` uses a single `@ts-expect-error` on the import plus local structural types. Remove the suppression only if the types are added as a dependency.
 - The vgpu **library** is integrated; the globally configured `vgpu` MCP server (`npx -y vgpu mcp`) is currently broken because the npx cache is missing `bin/vgpu.js`. Use the library/runtime, or point the MCP client at `https://vgpu.sh/api/mcp`.
 - `docs/REDESIGN.md` is the design brief for the VOID PROTOCOL redesign (tokens, motion language, transition specs, ownership map). Read it before changing the visual language.
-- Dormant code, do not assume it is wired up: `hooks/useAnimeScope.ts`, `useInView`, `useParallax`, `useScrollProgress`, `components/animations/TextReveal.tsx`, `ScrambleText.tsx`, `MagneticCursor.tsx`, and `SectionReveal.tsx` currently have no consumers (`PageLoader` is superseded by `KineticLoader`; `ScrambleText` was retired because its random glyphs read as broken text). Active: `AnimeText`, `useCountUp`, `EnhancedCursor`.
+- Dormant code, do not assume it is wired up: `hooks/useAnimeScope.ts`, `useInView`, `useParallax`, `useScrollProgress`, `components/animations/TextReveal.tsx`, `ScrambleText.tsx`, `MagneticCursor.tsx`, `SectionReveal.tsx`, `SectionGhostNumber.tsx`, `AnimeAccentLine.tsx`, `TerminalBlock.tsx`, `sections/hero/HeroField.tsx`, `sections/hero/HeroRail.tsx`, `sections/projects/HangarView.tsx`, `sections/projects/ProjectPanel.tsx`, `sections/projects/useCompactMode.ts`, `sections/stats/SparkBars.tsx`, and `sections/*/Brackets.tsx` currently have no consumers (`PageLoader` is superseded by `KineticLoader`; `ScrambleText` was retired because its random glyphs read as broken text). Active primitives: `AnimeText`, `StaggerGroup`, `SectionHeading`, `TiltCard`, `MagneticButton`, `useCountUp`, `EnhancedCursor`.
 - Legacy leftovers from the pre-VOID transitions: the `.curtain-wordmark` / `.slats-overlay` / `.slat-cell` CSS in `globals.css` and the stale `TRANSITION_MS` jsdoc in `lib/anime.ts` (still naming curtain/zoom-blur/type-wipe/slats) are unused. Do not treat them as the current transition model.
 - `package.json`'s `name`/`author`/`repository` still point at the upstream `ai-website-cloner-template` this repo was forked from; the actual project is HelloTeror (see `README.md`).
 - Analytics is self-hosted **Umami**, configured inline in `layout.tsx`'s `<head>` with two `defer` scripts (`script.js` + `recorder.js`) on `umami.trfox.top`. `@openpanel/nextjs` is still in `package.json` but is no longer imported.

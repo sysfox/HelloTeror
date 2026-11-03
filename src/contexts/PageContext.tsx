@@ -23,7 +23,7 @@ export type PageId =
  * 旧版的 curtain / zoom-blur / type-wipe / slats 已整体替换。新转场全部带 Z 轴纵深，
  * 页面切换读作镜头在深空中运动，而不是两块平面淡入淡出：
  *  - depth-dive    旧页向镜头外冲出，新页从深空 Z=-2000 拉回；同心环隧道 overlay
- *  - fracture      屏幕按 4×3 多边形碎片裂开飞出；新页带色差显影
+ *  - fracture      屏幕按 4×3 多边形碎片裂开飞出；新页放大回正 + 去模糊显影
  *  - warp-tunnel   径向速度线 + 中点白闪；旧页被吸入中心，新页从中心炸开
  *  - lattice-wipe  线框平面自上而下横扫，旧页被"切片"带走，新页自下浮起
  *

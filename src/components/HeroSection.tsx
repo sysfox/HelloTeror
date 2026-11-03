@@ -8,7 +8,7 @@ import { useT } from "@/contexts/LocaleContext";
 import { prefersReducedMotion } from "@/lib/anime";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { MagneticButton } from "@/components/animations/MagneticButton";
-import { ScrambleText } from "@/components/animations/ScrambleText";
+import { AnimeText } from "@/components/animations/AnimeText";
 import { TerminalBlock } from "@/components/animations/TerminalBlock";
 import { HeroField } from "@/components/sections/hero/HeroField";
 import { HeroRail } from "@/components/sections/hero/HeroRail";
@@ -20,7 +20,7 @@ const AVATAR = "https://avatars.githubusercontent.com/u/99103591?v=4";
 /** KineticLoader 完成时写入的 sessionStorage key，用于时序同步 */
 const LOADER_KEY = "teror-fox-loader-played";
 
-/** 巨型姓名：字号/字距集中在 wrapper 上，色差回响层与 ScrambleText 共同继承 */
+/** 巨型姓名：字号/字距集中在 wrapper 上，AnimeText 直接继承 */
 const NAME_STYLE: CSSProperties = {
   fontSize: "clamp(2.55rem, 8.2vw, 7rem)",
   lineHeight: 0.92,
@@ -32,7 +32,7 @@ const NAME_STYLE: CSSProperties = {
 /**
  * Hero 首屏（非对称 HUD 构图）：
  *  - 背景：HeroField 坐标标尺装置（同心环 / 刻度 / 扫描带），随指针视差
- *  - 左栏：身份元数据条 → 巨型 ScrambleText 姓名（青/洋红色差回响）→
+ *  - 左栏：身份元数据条 → 巨型姓名（干净的纵深入场）→
  *          标语 / 身份行 → bio → CTA 组
  *  - 右栏：实时状态读数（位置 / 可用性 / 时区）+ 终端启动会话
  *  - 底部：SITE_LINKS 站点网络条
@@ -200,7 +200,7 @@ export function HeroSection() {
                     </span>
                   </div>
 
-                  {/* 巨型姓名：HUD 标尺行 + 色差回响 + 解码入场 */}
+                  {/* 巨型姓名：HUD 标尺行 + 干净的纵深入场 */}
                   <div data-stagger-item className="mt-6 w-full min-w-0">
                     <div aria-hidden className="mb-2 flex items-center gap-2.5">
                       <span
@@ -238,36 +238,17 @@ export function HeroSection() {
                     </div>
 
                     <div className="relative w-full" style={NAME_STYLE}>
-                      {/* 色差回响层：装饰性重影，不参与朗读 */}
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute inset-0 block select-none"
-                        style={{
-                          color: "var(--accent-2, #ff3ec9)",
-                          opacity: 0.22,
-                          transform: "translate3d(5px, 1px, 0)",
-                        }}
-                      >
-                        Teror Fox
-                      </span>
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute inset-0 block select-none"
-                        style={{
-                          color: "var(--accent)",
-                          opacity: 0.2,
-                          transform: "translate3d(-4px, -1px, 0)",
-                        }}
-                      >
-                        Teror Fox
-                      </span>
-                      <ScrambleText
+                      <AnimeText
                         as="h1"
                         text="Teror Fox"
                         delay={startDelay + 150}
                         duration={1000}
                         staggerMs={50}
                         from="first"
+                        y={24}
+                        rotate={0}
+                        blur={10}
+                        depth={90}
                         className="relative block"
                         style={{
                           color: "var(--text-primary)",

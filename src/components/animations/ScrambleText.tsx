@@ -14,12 +14,14 @@ import {
 } from "@/lib/anime";
 
 /**
+ * 字符 scramble 洗牌入场（已停用）。Hero 姓名改用干净的 AnimeText 纵深入场，
+ * 因为随机字形切换会被读成「字体损坏」。本文件暂无消费者，保留仅作参考。
+ *
  * 字符 scramble 洗牌入场：每个字符先在十六进制/二进制字形集中快速洗牌，
  * 随进度收敛到目标字符定格（VOID PROTOCOL 的「信号解码」仪式）。
  *
- * 与 AnimeText（逐字位移+模糊+色差材质化）的区别：ScrambleText 的视觉重点
- * 是「字符内容本身的随机变化」，用于 Hero 主标题；Section 标题用 AnimeText，
- * 两者形态明确区分，避免整页都是解码造成视觉重复。
+ * 与 AnimeText（逐字位移+模糊+纵深）的区别：ScrambleText 的视觉重点
+ * 是「字符内容本身的随机变化」；该效果已被判定为字体损坏感，Hero 已改用 AnimeText。
  *
  * accent flicker：洗牌期间字符临时切到磷光青并加辉光，定格瞬间清空 inline
  * color/textShadow 交还给继承色 —— 颜色只写两次（开始/结束），不是逐帧写，

@@ -7,7 +7,7 @@
 /* =========================================================================
    VOID PROTOCOL / 深渊协议 — 设计系统
    一台环绕死星运行的机器智能的操控界面：深空黑、磷光青、等离子洋红、
-   信号琥珀、HUD 工业排版、扫描线、色差、体积光。
+   信号琥珀、HUD 工业排版、扫描线、体积光与纵深。
    颜色事实来源：docs/REDESIGN.md §3。
    ========================================================================= */
 
@@ -687,13 +687,6 @@
     -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 70%);
     mask-image: linear-gradient(to top, #000 0%, transparent 70%);
     opacity: 0.35;
-  }
-
-  /* 色差文字：青/洋红左右分离 */
-  .chromatic-text {
-    text-shadow:
-      -0.045em 0 color-mix(in srgb, var(--accent) 60%, transparent),
-      0.045em 0 color-mix(in srgb, var(--accent-2) 50%, transparent);
   }
 
   /* 噪点覆盖层：SVG feTurbulence，需自行定位（默认铺满最近定位祖先） */

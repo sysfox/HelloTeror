@@ -10,8 +10,8 @@ import { AnimeText } from "@/components/animations/AnimeText";
  *  - 编号 chip：切角面板 + 呼吸指示点，工业仪表编号
  *  - 扫描强调线：AnimeAccentLine 自驱绘制（能量束带辉光）
  *  - mono 标签：大写、超宽字距，HUD 元数据
- *  - 巨型标题：AnimeText 逐字材质化（Z/色差/模糊）+ 背后一层描边「深度层」
- *    偏移 0.05em，形成从体积里挤出的厚度感
+ *  - 巨型标题：AnimeText 逐字纵深入场（Z/模糊），不再叠加色差重影或描边重影；
+ *    文字保持干净，视觉纵深交给背景 3D 场景
  *
  * 「装配式」入场：编号落位（0ms）→ 能量线绘制（AnimeAccentLine 自驱 accentDelay）
  * → 标签淡入（260ms）→ 深度层与标题（startDelay）。三者靠时序协调，不共享
@@ -46,22 +46,15 @@ export function SectionHeading({
 }: SectionHeadingProps) {
   const indexRef = useRef<HTMLSpanElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
-  const outlineRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const idx = indexRef.current;
     const lbl = labelRef.current;
-    const outline = outlineRef.current;
 
     // reduced-motion：跳过动画，直接置终态
     if (prefersReducedMotion()) {
       if (idx) idx.style.opacity = "1";
       if (lbl) lbl.style.opacity = "1";
-      if (outline) {
-        outline.style.opacity = "0.55";
-        outline.style.transform = "";
-        outline.style.filter = "";
-      }
       return;
     }
 
@@ -83,22 +76,10 @@ export function SectionHeading({
           ease: EASE.expo,
         })
       : null;
-    // 深度描边层：比标题稍慢、稍糊地落位，制造纵深残影
-    const a3 = outline
-      ? animate(outline, {
-          opacity: [0, 0.55],
-          translateY: [22, 0],
-          filter: ["blur(10px)", "blur(0px)"],
-          duration: 1100,
-          delay: startDelay,
-          ease: EASE.expo,
-        })
-      : null;
 
     return () => {
       a1?.revert();
       a2?.revert();
-      a3?.revert();
     };
   }, [startDelay]);
 
@@ -172,44 +153,20 @@ export function SectionHeading({
         />
       </div>
 
-      {/* 标题：深度描边层（绝对定位、不占布局）+ 逐字材质化主标题 */}
-      <div className="relative">
-        <span
-          aria-hidden
-          className="pointer-events-none select-none absolute inset-x-0 top-0 block"
-          style={{ transform: "translate3d(0.045em, 0.05em, 0)" }}
-        >
-          <span
-            ref={outlineRef}
-            className={`block text-[clamp(2.5rem,7vw,5rem)] font-semibold tracking-[-0.03em] leading-[1.05] ${titleClassName}`}
-            style={{
-              ...titleStyle,
-              color: "transparent",
-              WebkitTextStrokeWidth: "1px",
-              WebkitTextStrokeColor: "var(--border-strong)",
-              textWrap: "balance",
-              opacity: 0,
-            }}
-          >
-            {title}
-          </span>
-        </span>
-
-        <AnimeText
-          as="h2"
-          text={title}
-          delay={startDelay}
-          staggerMs={26}
-          from="first"
-          duration={900}
-          y={46}
-          blur={14}
-          depth={140}
-          chromatic={3.5}
-          className={`relative text-[clamp(2.5rem,7vw,5rem)] font-semibold tracking-[-0.03em] leading-[1.05] ${titleClassName}`}
-          style={titleStyles}
-        />
-      </div>
+      {/* 标题：干净的逐字纵深入场，不叠加描边 / 色差重影 */}
+      <AnimeText
+        as="h2"
+        text={title}
+        delay={startDelay}
+        staggerMs={26}
+        from="first"
+        duration={900}
+        y={46}
+        blur={14}
+        depth={140}
+        className={`relative text-[clamp(2.5rem,7vw,5rem)] font-semibold tracking-[-0.03em] leading-[1.05] ${titleClassName}`}
+        style={titleStyles}
+      />
     </div>
   );
 }

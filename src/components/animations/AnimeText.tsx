@@ -18,10 +18,8 @@ import {
  * 逐字「材质化」入场（VOID PROTOCOL）：
  *  - 主轴：Z 轴从深处（translateZ(-depth)）拉回 + 模糊对焦 + 位移/旋转收敛，
  *    让字符像从体积黑暗里被镜头拉出来，而不是简单的 fade-up
- *  - 色差：每个字符额外叠两枚青/洋红「幽灵层」，入场时左右错位、随后收束淡出，
- *    模拟镜头色散；终态只剩干净字形，避免长期色差降低可读性
- *  - 幽灵层 inline opacity:0 起步：既防 FOUC，也让 reduced-motion 下
- *    （CSS 只解除 .anime-init-children > * 的隐藏，不会命中嵌套幽灵层）保持不可见
+ *  - 不叠加色差幽灵层：此前的青/洋红错位重影会被读成「字体损坏」，已移除；
+ *    标题只保留干净的逐字纵深入场，视觉重点交回背景 3D 场景
  *
  * FOUC 策略：父级挂 anime-init-children，CSS 先把直接子级（字符 wrapper）
  * 置 opacity:0；动画首帧在不可见状态下写入 transform/filter 起始值，无闪烁。
@@ -52,20 +50,9 @@ type AnimeTextProps = {
   trigger?: "mount" | "viewport";
   /** viewport 触发阈值 0~1 */
   threshold?: number;
-  /** 色差分离强度（px），0 关闭幽灵层错位；默认 3 */
-  chromatic?: number;
   /** 入场景深起始（px，沿 Z 轴后退），默认 120 */
   depth?: number;
 };
-
-/** 幽灵层动画：从错位/模糊收束到目标位置，同时淡出，只在中段可见 */
-function ghostKeyframes(dir: number, chromatic: number, blur: number) {
-  return {
-    opacity: [0, 0.85, 0],
-    translateX: [dir * chromatic * 2.2, 0],
-    filter: [`blur(${Math.max(blur * 0.6, 2)}px)`, "blur(0px)"],
-  };
-}
 
 export function AnimeText({
   text,
@@ -81,7 +68,6 @@ export function AnimeText({
   blur = 12,
   trigger = "mount",
   threshold = 0.3,
-  chromatic = 3,
   depth = 120,
 }: AnimeTextProps) {
   const Tag = (as ?? "span") as ElementType;
@@ -119,48 +105,6 @@ export function AnimeText({
           },
         })
       );
-
-      // 色差幽灵层：青向左、洋红向右，与主轴同 delay/duration 同步收束
-      if (chromatic > 0) {
-        const cyan = el.querySelectorAll<HTMLElement>(
-          '[data-ghost][data-ghost-dir="-1"]'
-        );
-        const magenta = el.querySelectorAll<HTMLElement>(
-          '[data-ghost][data-ghost-dir="1"]'
-        );
-        if (cyan.length) {
-          anims.push(
-            animate(cyan, {
-              ...ghostKeyframes(-1, chromatic, blur),
-              delay: delayFn,
-              duration,
-              ease: "outQuad",
-              // 终态兜底归零：多关键帧收尾在不同运行时的处理可能有差异，
-              // 显式归零避免残留一点点色边
-              onComplete: () => {
-                cyan.forEach((g) => {
-                  g.style.opacity = "0";
-                });
-              },
-            })
-          );
-        }
-        if (magenta.length) {
-          anims.push(
-            animate(magenta, {
-              ...ghostKeyframes(1, chromatic, blur),
-              delay: delayFn,
-              duration,
-              ease: "outQuad",
-              onComplete: () => {
-                magenta.forEach((g) => {
-                  g.style.opacity = "0";
-                });
-              },
-            })
-          );
-        }
-      }
     };
 
     if (trigger === "mount") {
@@ -185,7 +129,7 @@ export function AnimeText({
       observer.disconnect();
       anims.forEach((a) => a.revert());
     };
-  }, [trigger, threshold, text, staggerMs, delay, from, duration, y, rotate, blur, chromatic, depth]);
+  }, [trigger, threshold, text, staggerMs, delay, from, duration, y, rotate, blur, depth]);
 
   return (
     <Tag
@@ -204,36 +148,7 @@ export function AnimeText({
             className="relative inline-block whitespace-pre"
             style={{ willChange: "transform, opacity, filter" }}
           >
-            {/* 青色幽灵层（向左错位） */}
-            <span
-              data-ghost
-              data-ghost-dir="-1"
-              className="pointer-events-none absolute left-0 top-0 select-none whitespace-pre"
-              style={{
-                color: "var(--accent, #5af2ff)",
-                opacity: 0,
-                willChange: "transform, opacity, filter",
-              }}
-            >
-              {display}
-            </span>
-            {/* 洋红幽灵层（向右错位） */}
-            <span
-              data-ghost
-              data-ghost-dir="1"
-              className="pointer-events-none absolute left-0 top-0 select-none whitespace-pre"
-              style={{
-                color: "var(--accent-2, #ff3ec9)",
-                opacity: 0,
-                willChange: "transform, opacity, filter",
-              }}
-            >
-              {display}
-            </span>
-            {/* 实心字形：压在幽灵层之上 */}
-            <span className="relative" style={{ zIndex: 1 }}>
-              {display}
-            </span>
+            {display}
           </span>
         );
       })}

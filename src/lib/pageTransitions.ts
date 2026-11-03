@@ -237,19 +237,15 @@ export function runTransition(
         );
       }
       if (enterEl) {
-        // 新页轻微放大回正 + 去模糊 + 左右各一条青/洋红投影：
-        // 投影在显影过程中收拢为透明，读作"色差分离后重新合焦"。
-        // 两个 filter 关键帧的函数序列必须一致，anime 才能逐项插值。
+        // 新页轻微放大回正 + 去模糊。此前叠在整页上的青/洋红 drop-shadow
+        // 会让文字出现红蓝错边（被读成「字体损坏」），已移除；纵深交给背景场景。
         tl.add(
           enterEl,
           {
             opacity: [0, 1],
             scale: [1.07, 1],
             translateX: [forward ? 20 : -20, 0],
-            filter: [
-              "blur(20px) drop-shadow(8px 0 0 rgba(90,242,255,0.35)) drop-shadow(-8px 0 0 rgba(255,62,201,0.30))",
-              "blur(0px) drop-shadow(0 0 0 rgba(90,242,255,0)) drop-shadow(0 0 0 rgba(255,62,201,0))",
-            ],
+            filter: ["blur(20px)", "blur(0px)"],
             duration: TOTAL - ENTER_AT,
             ease: EASE.expo,
           },

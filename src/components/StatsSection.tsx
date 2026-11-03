@@ -6,117 +6,27 @@ import {
   GitPullRequest,
   CircleDot,
   Users,
-  type LucideIcon,
 } from "lucide-react";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useApiData } from "@/hooks/useApiData";
-import type { GitHubStatsResponse, StatItem } from "@/types";
+import type { GitHubStatsResponse } from "@/types";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
 import { TiltCard } from "@/components/animations/TiltCard";
 import { SectionHeading } from "@/components/animations/SectionHeading";
 import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { ContributionGraph } from "@/components/animations/ContributionGraph";
 import { useLocale } from "@/contexts/LocaleContext";
+import {
+  GaugeCard,
+  GaugeSkeleton,
+  type GaugeStat,
+} from "./sections/stats/GaugeCard";
+import styles from "./sections/stats/stats.module.css";
 
-function StatCard({
-  stat,
-  start,
-  intlLocale,
-}: {
-  stat: StatItem & { icon: LucideIcon };
-  start: boolean;
-  intlLocale: string;
-}) {
-  const value = useCountUp(stat.value, {
-    duration: 1600,
-    start,
-    decimals: stat.decimals ?? 0,
-  });
-  const Icon = stat.icon;
-
-  return (
-    <div
-      className="group relative rounded-2xl border p-5 sm:p-6 transition-all duration-500 theme-transition active:scale-[0.96]"
-      style={{
-        borderColor: "var(--border-subtle)",
-        background: "var(--surface)",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor =
-          "var(--accent-border)";
-        (e.currentTarget as HTMLElement).style.background = "var(--accent-soft)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor =
-          "var(--border-subtle)";
-        (e.currentTarget as HTMLElement).style.background = "var(--surface)";
-      }}
-    >
-      <div
-        aria-hidden
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(circle at 50% 0%, var(--accent-soft), transparent 70%)",
-        }}
-      />
-      <div
-        className="relative flex items-center gap-2 mb-3"
-        style={{ color: "var(--accent)" }}
-      >
-        <Icon size={18} />
-      </div>
-      <div className="relative flex items-baseline gap-0.5">
-        <span
-          className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight tabular-nums"
-          style={{ color: "var(--text-primary)" }}
-        >
-          {value.toLocaleString(intlLocale)}
-        </span>
-        {stat.suffix && (
-          <span
-            className="text-2xl sm:text-3xl md:text-4xl font-semibold"
-            style={{ color: "var(--accent)" }}
-          >
-            {stat.suffix}
-          </span>
-        )}
-      </div>
-      <p
-        className="relative mt-1.5 text-xs sm:text-sm"
-        style={{ color: "var(--text-tertiary)" }}
-      >
-        {stat.label}
-      </p>
-    </div>
-  );
-}
-
-function StatCardSkeleton() {
-  return (
-    <div
-      className="rounded-2xl border p-5 sm:p-6"
-      style={{
-        borderColor: "var(--border-subtle)",
-        background: "var(--surface)",
-      }}
-    >
-      <span
-        className="block h-[18px] w-[18px] rounded mb-3 animate-pulse"
-        style={{ background: "var(--surface-strong)" }}
-      />
-      <span
-        className="block h-8 w-20 rounded mb-2 animate-pulse"
-        style={{ background: "var(--surface-strong)" }}
-      />
-      <span
-        className="block h-3 w-24 rounded animate-pulse"
-        style={{ background: "var(--surface-strong)" }}
-      />
-    </div>
-  );
-}
-
+/**
+ * 尾部附加读数：沿用 useCountUp 的既有 API，仅换成 HUD 排版。
+ * start 与主仪表同步，保证一屏内所有数字同一时刻起跑。
+ */
 function ExtraStat({
   value,
   label,
@@ -130,11 +40,10 @@ function ExtraStat({
 }) {
   const v = useCountUp(value, { duration: 1600, start, decimals: 0 });
   return (
-    <span className="inline-flex items-center gap-2">
-      <span className="font-mono" style={{ color: "var(--text-primary)" }}>
-        {v.toLocaleString(intlLocale)}
-      </span>
-      <span>{label}</span>
+    <span className={styles.extra}>
+      <span aria-hidden className={styles.extraKey} />
+      <span className={styles.extraValue}>{v.toLocaleString(intlLocale)}</span>
+      <span className={styles.extraLabel}>{label}</span>
     </span>
   );
 }
@@ -156,38 +65,45 @@ export function StatsSection() {
   useEffect(() => {
     if (start) return;
     if (loading || !data) return;
-    const t = window.setTimeout(() => setStart(true), 80);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(() => setStart(true), 80);
+    return () => window.clearTimeout(timer);
   }, [loading, data, start]);
 
-  const STATS: (StatItem & { icon: LucideIcon })[] = [
+  // 主仪表：meterScale 只是仪表环的视觉满量程，不展示百分比文案，
+  // 因此不同量纲的指标也能并排成一套读数。
+  const STATS: GaugeStat[] = [
     {
       id: "commits",
       label: t.stats.commits,
       value: data?.commits ?? 0,
       suffix: "+",
       icon: GitCommitHorizontal,
+      hud: "var(--accent)",
+      scale: 3000,
     },
     {
       id: "prs",
       label: t.stats.prs,
       value: data?.prs ?? 0,
-      suffix: "",
       icon: GitPullRequest,
+      hud: "var(--accent-2, #ff3ec9)",
+      scale: 300,
     },
     {
       id: "issues",
       label: t.stats.issues,
       value: data?.issues ?? 0,
-      suffix: "",
       icon: CircleDot,
+      hud: "var(--accent-3, #ffc46b)",
+      scale: 300,
     },
     {
       id: "contrib",
       label: t.stats.contributedTo,
       value: data?.contributedTo ?? 0,
-      suffix: "",
       icon: Users,
+      hud: "var(--accent-4, #7c5cff)",
+      scale: 200,
     },
   ];
 
@@ -206,7 +122,6 @@ export function StatsSection() {
       <SectionGhostNumber index="03" />
 
       <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
-        {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
         <SectionHeading index="03" label={t.stats.label} title={t.stats.title} />
         <p
           className="fade-up-soft text-sm sm:text-base mb-6"
@@ -215,11 +130,11 @@ export function StatsSection() {
           {t.stats.subtitle}
         </p>
 
-        {/* 数字卡片：交错入场 + 3D 倾斜 + count-up */}
+        {/* 遥测仪表：交错材质化入场 + 3D 倾斜 + count-up */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             {Array.from({ length: 4 }).map((_, i) => (
-              <StatCardSkeleton key={i} />
+              <GaugeSkeleton key={i} />
             ))}
           </div>
         ) : (
@@ -229,19 +144,24 @@ export function StatsSection() {
             staggerMs={90}
             from="center"
           >
-            {STATS.map((stat) => (
+            {STATS.map((stat, i) => (
               <div key={stat.id} data-stagger-item>
-                <TiltCard maxTilt={6} scale={1.03}>
-                  <StatCard stat={stat} start={start} intlLocale={intlLocale} />
+                <TiltCard maxTilt={4} scale={1.02}>
+                  <GaugeCard
+                    stat={stat}
+                    index={i}
+                    start={start}
+                    intlLocale={intlLocale}
+                  />
                 </TiltCard>
               </div>
             ))}
           </StaggerGroup>
         )}
 
-        {/* 贡献热图：对角波浪点亮。与卡片入场错开，等 count-up 起跑后再铺开 */}
+        {/* 贡献热图：对角波浪点亮。等 count-up 起跑后再铺开 */}
         {!loading && data?.calendar && (
-          <div className="mt-7">
+          <div className="mt-5">
             <ContributionGraph
               calendar={data.calendar}
               start={start}
@@ -250,21 +170,21 @@ export function StatsSection() {
           </div>
         )}
 
-        {/* Extra inline stats */}
+        {/* 尾部附加读数 */}
         {loading ? (
-          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <div className={styles.extraList} style={{ marginTop: 20 }}>
             {Array.from({ length: 3 }).map((_, i) => (
               <span
                 key={i}
-                className="h-3 w-28 rounded animate-pulse"
-                style={{ background: "var(--surface-strong)" }}
+                className={styles.skeletonBar}
+                style={{ width: 108, height: 10 }}
               />
             ))}
           </div>
         ) : (
           <div
-            className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs sm:text-sm fade-up-soft"
-            style={{ animationDelay: "0.85s", color: "var(--text-tertiary)" }}
+            className={`${styles.extraList} fade-up-soft`}
+            style={{ marginTop: 20, animationDelay: "0.85s" }}
           >
             {EXTRA_STATS.map((s) => (
               <ExtraStat
@@ -279,10 +199,11 @@ export function StatsSection() {
               href="https://github.com/sysfox"
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-auto transition-colors"
+              className="ml-auto font-mono text-[10px] uppercase tracking-[0.18em] transition-colors"
               style={{ color: "var(--accent)" }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+                (e.currentTarget as HTMLElement).style.color =
+                  "var(--text-primary)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.color = "var(--accent)";

@@ -1,11 +1,10 @@
 "use client";
 
 import {
-  MapPin,
   Building2,
   GraduationCap,
+  MapPin,
   Sparkles,
-  Award,
   type LucideIcon,
 } from "lucide-react";
 import { StaggerGroup } from "@/components/animations/StaggerGroup";
@@ -13,6 +12,9 @@ import { TiltCard } from "@/components/animations/TiltCard";
 import { SectionHeading } from "@/components/animations/SectionHeading";
 import { SectionGhostNumber } from "@/components/animations/SectionGhostNumber";
 import { useT } from "@/contexts/LocaleContext";
+import { DossierPanel } from "@/components/sections/about/DossierPanel";
+import { FactRow } from "@/components/sections/about/FactRow";
+import { IdentityBlock } from "@/components/sections/about/IdentityBlock";
 
 /** 工作室名：专有名词，不进字典 */
 const AFFILIATION = "TF Studio";
@@ -25,6 +27,26 @@ const ACHIEVEMENTS: { title: string; count: string | null }[] = [
   { title: "GitHub Pro", count: "" },
 ];
 
+/** 档案面板的层叠深度：不同 Z 让面板在透视里形成前后关系 */
+const DEPTH = {
+  identity: 26,
+  bio: 14,
+  data: 0,
+  achievements: 10,
+  log: 6,
+  signal: 18,
+} as const;
+
+/**
+ * About「档案卷宗」布局：
+ *  - 保留 SectionHeading / SectionGhostNumber / StaggerGroup / TiltCard 既有 API
+ *  - 左：身份档案（竖排索引轨 + 肖像 + 读数），TiltCard 提供 3D 倾斜
+ *  - 右：bio 面板、key/value 数据行、成就、profile.sh 日志、描边巨型引言
+ *  - 各面板通过 translateZ 分处不同 Z 层；父级 perspective + item preserve-3d
+ *  - 入场仍是 StaggerGroup 的交错 materialize，reduced-motion 由其 CSS 兜底
+ *
+ * 所有文案键与 AFFILIATION / ACHIEVEMENTS 常量与改造前一致。
+ */
 export function AboutSection() {
   const t = useT();
 
@@ -44,194 +66,282 @@ export function AboutSection() {
       <SectionGhostNumber index="01" />
 
       <div className="relative isolate w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar py-12">
-        {/* Section heading：元数据条 + 巨型 AnimeText 标题 */}
         <SectionHeading index="01" label={t.about.label} title={t.about.title} />
-        <p
-          className="fade-up-soft text-base sm:text-lg font-mono mb-8"
-          style={{ animationDelay: "350ms", color: "var(--text-tertiary)" }}
-        >
-          {t.about.subtitle}
-        </p>
 
-        {/* 内容网格：左右两列各块作为 data-stagger-item 直接子级交错入场 */}
+        {/* 副标题：HUD 读音，静态呈现（主入场交给下方 StaggerGroup） */}
+        <div className="mb-6 -mt-2 flex items-center gap-3">
+          <span
+            aria-hidden
+            className="h-px w-6 shrink-0"
+            style={{
+              background: "var(--accent-border, rgba(90,242,255,0.42))",
+            }}
+          />
+          <p
+            className="font-mono text-[11px] uppercase tracking-[0.24em]"
+            style={{ color: "var(--text-tertiary)" }}
+          >
+            {t.about.subtitle}
+          </p>
+        </div>
+
         <StaggerGroup
-          className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start"
+          className="grid grid-cols-1 gap-4 [perspective:1400px] lg:grid-cols-12 lg:gap-5"
           startDelay={480}
-          staggerMs={110}
+          staggerMs={90}
+          y={30}
+          duration={900}
         >
-          {/* Left: Bio */}
-          <div data-stagger-item className="lg:col-span-7 space-y-4">
-            <p
-              className="text-sm sm:text-base leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
+          {/* ===== 01 身份档案 ===== */}
+          <div
+            data-stagger-item
+            className="min-w-0 lg:col-span-4"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <TiltCard
+              maxTilt={6}
+              scale={1.02}
+              className="h-full [&>div]:h-full"
             >
-              {t.about.bioBefore}
-              <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>
-                Teror Fox
-              </span>
-              {t.about.bioAfter}
-            </p>
-
-            {/* Code-style identity card */}
-            <div
-              className="rounded-xl border overflow-hidden"
-              style={{
-                borderColor: "var(--border-subtle)",
-                background: "var(--terminal-bg)",
-                boxShadow: "var(--shadow-card)",
-                backdropFilter: "blur(8px)",
-              }}
-            >
-              <div
-                className="flex items-center gap-1.5 px-3 py-1.5 border-b"
-                style={{
-                  borderColor: "var(--border-subtle)",
-                  background: "var(--surface)",
-                }}
+              <DossierPanel
+                index="00"
+                label="IDENTITY"
+                depth={DEPTH.identity}
+                className="h-full"
+                bodyClassName="relative flex min-h-0 flex-1 flex-col p-0"
               >
-                <span className="w-2 h-2 rounded-full bg-[#ff5f57]" />
-                <span className="w-2 h-2 rounded-full bg-[#febc2e]" />
-                <span className="w-2 h-2 rounded-full bg-[#28c840]" />
-                <span
-                  className="ml-2 text-[10px] font-mono truncate"
-                  style={{ color: "var(--text-tertiary)" }}
-                >
-                  ~/teror-fox/profile.sh
-                </span>
-              </div>
-              <pre
-                className="px-3 py-3 text-[11px] sm:text-[12.5px] leading-relaxed font-mono overflow-x-auto"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                <code>
-                  <span style={{ color: "var(--text-tertiary)" }}>$</span>{" "}
-                  <span style={{ color: "var(--accent)" }}>whoami</span>
-                  {"\n"}
-                  {t.about.shellWhoami}
-                  {"\n\n"}
-                  <span style={{ color: "var(--text-tertiary)" }}>$</span>{" "}
-                  <span style={{ color: "var(--accent)" }}>cat</span> bio.txt
-                  {"\n"}
-                  {t.about.shellBioLine1}
-                  {"\n"}
-                  {t.about.shellBioLine2}
-                  {"\n\n"}
-                  <span style={{ color: "var(--text-tertiary)" }}>$</span>{" "}
-                  <span style={{ color: "var(--accent)" }}>status</span> --now
-                  {"\n"}
-                  <span style={{ color: "#28c840" }}>●</span> {t.about.shellStatus1}
-                  {"\n"}
-                  <span style={{ color: "#febc2e" }}>●</span> {t.about.shellStatus2}
-                </code>
-              </pre>
-            </div>
+                <IdentityBlock affiliation={AFFILIATION} />
+              </DossierPanel>
+            </TiltCard>
           </div>
 
-          {/* Right: Facts + Achievements + Quote，整体作为一个交错项 */}
-          <div data-stagger-item className="lg:col-span-5 space-y-3">
-            {/* Facts grid：每张 fact 卡片用 TiltCard 包裹，3D 倾斜 */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {FACTS.map((fact) => {
-                const Icon = fact.icon;
-                return (
-                  <TiltCard key={fact.label} maxTilt={6} scale={1.04}>
-                    <div
-                      className="group relative rounded-xl border p-3 transition-all duration-500 theme-transition h-full active:scale-[0.96]"
-                      style={{
-                        borderColor: "var(--border-subtle)",
-                        background: "var(--surface)",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderColor =
-                          "var(--accent-border)";
-                        (e.currentTarget as HTMLElement).style.background =
-                          "var(--accent-soft)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderColor =
-                          "var(--border-subtle)";
-                        (e.currentTarget as HTMLElement).style.background =
-                          "var(--surface)";
-                      }}
-                    >
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <Icon className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />
-                        <span
-                          className="text-[10px] uppercase tracking-wider"
-                          style={{ color: "var(--text-tertiary)" }}
-                        >
-                          {fact.label}
-                        </span>
-                      </div>
-                      <p
-                        className="text-xs sm:text-sm font-medium"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {fact.value}
-                      </p>
-                    </div>
-                  </TiltCard>
-                );
-              })}
-            </div>
-
-            {/* Achievements */}
-            <div
-              className="rounded-xl border p-3.5"
-              style={{
-                borderColor: "var(--border-subtle)",
-                background:
-                  "linear-gradient(135deg, var(--surface-strong), transparent)",
-              }}
+          {/* ===== 02 Bio ===== */}
+          <div
+            data-stagger-item
+            className="min-w-0 lg:col-span-8"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <DossierPanel
+              index="01"
+              label="BIO"
+              depth={DEPTH.bio}
+              className="h-full"
             >
-              <div className="flex items-center gap-2 mb-2.5">
-                <Award className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />
+              <p
+                className="text-sm leading-relaxed sm:text-[15px]"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {t.about.bioBefore}
                 <span
-                  className="text-[10px] uppercase tracking-wider"
-                  style={{ color: "var(--text-tertiary)" }}
+                  style={{
+                    color: "var(--text-primary)",
+                    fontWeight: 600,
+                  }}
                 >
-                  {t.about.achievements}
+                  Teror Fox
                 </span>
+                {t.about.bioAfter}
+              </p>
+
+              <div
+                aria-hidden
+                className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t pt-3 font-mono text-[9px] uppercase tracking-[0.22em]"
+                style={{
+                  borderColor: "var(--border-subtle)",
+                  color: "var(--text-tertiary)",
+                }}
+              >
+                <span style={{ color: "var(--accent)" }}>{"// SIG"}</span>
+                <span className="tabular-nums">0x7F02</span>
+                <span className="h-1 w-1 rotate-45" style={{ background: "var(--accent-2, #ff3ec9)" }} />
+                <span className="tabular-nums">032.041</span>
+                <span className="h-1 w-1 rotate-45" style={{ background: "var(--accent-3, #ffc46b)" }} />
+                <span className="tabular-nums">STABLE</span>
+                <span className="ml-auto tabular-nums">01 / 04</span>
               </div>
-              <ul className="space-y-1.5">
-                {ACHIEVEMENTS.map((a) => (
+            </DossierPanel>
+          </div>
+
+          {/* ===== 03 数据行 ===== */}
+          <div
+            data-stagger-item
+            className="min-w-0 lg:col-span-7"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <DossierPanel
+              index="02"
+              label="DATA"
+              depth={DEPTH.data}
+              className="h-full"
+            >
+              <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                {FACTS.map((fact, i) => (
+                  <FactRow
+                    key={fact.label}
+                    index={String(i + 1).padStart(2, "0")}
+                    icon={fact.icon}
+                    label={fact.label}
+                    value={fact.value}
+                  />
+                ))}
+              </div>
+            </DossierPanel>
+          </div>
+
+          {/* ===== 04 成就 ===== */}
+          <div
+            data-stagger-item
+            className="min-w-0 lg:col-span-5"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <DossierPanel
+              index="03"
+              label={t.about.achievements}
+              depth={DEPTH.achievements}
+              accent="var(--accent-3, #ffc46b)"
+              className="h-full"
+            >
+              <ul>
+                {ACHIEVEMENTS.map((a, i) => (
                   <li
                     key={a.title}
-                    className="flex items-center justify-between text-xs sm:text-sm"
+                    className="flex items-center gap-2.5 py-2"
+                    style={{
+                      borderTop:
+                        i > 0
+                          ? "1px solid var(--border-subtle)"
+                          : undefined,
+                    }}
                   >
-                    <span style={{ color: "var(--text-secondary)" }}>{a.title}</span>
                     <span
-                      className="font-mono text-[11px]"
-                      style={{ color: "var(--accent)" }}
+                      className="shrink-0 font-mono text-[9px] tabular-nums"
+                      style={{ color: "var(--text-tertiary)" }}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span
+                      aria-hidden
+                      className="h-1 w-1 shrink-0 rotate-45"
+                      style={{ background: "var(--accent-3, #ffc46b)" }}
+                    />
+                    <span
+                      className="min-w-0 flex-1 truncate text-[11px] sm:text-xs"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {a.title}
+                    </span>
+                    <span
+                      className="shrink-0 font-mono text-[10px] tabular-nums"
+                      style={{ color: "var(--accent-3, #ffc46b)" }}
                     >
                       {a.count ?? t.about.achievementMember}
                     </span>
                   </li>
                 ))}
               </ul>
-            </div>
+            </DossierPanel>
+          </div>
 
-            {/* Quote card */}
-            <div
-              className="rounded-xl border p-3.5"
-              style={{
-                borderColor: "var(--border-subtle)",
-                background: "var(--surface)",
-              }}
+          {/* ===== 05 profile.sh 日志 ===== */}
+          <div
+            data-stagger-item
+            className="min-w-0 lg:col-span-7"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <DossierPanel
+              index="04"
+              label="LOG"
+              depth={DEPTH.log}
+              className="h-full"
             >
-              <p
-                className="text-xs sm:text-sm italic leading-relaxed"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {t.about.quote}
-              </p>
-              <p
-                className="mt-1.5 text-[10px] font-mono"
+              <div
+                className="mb-2 flex items-center justify-between gap-3 font-mono text-[9px] tabular-nums"
                 style={{ color: "var(--text-tertiary)" }}
               >
-                — trfox.top
-              </p>
-            </div>
+                <span className="truncate">~/teror-fox/profile.sh</span>
+                <span className="shrink-0">UTF-8</span>
+              </div>
+              <div
+                className="font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words sm:text-[12px]"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <div>
+                  <span style={{ color: "var(--text-tertiary)" }}>$</span>{" "}
+                  <span style={{ color: "var(--accent)" }}>whoami</span>
+                </div>
+                <div>{t.about.shellWhoami}</div>
+                <div className="h-3" />
+                <div>
+                  <span style={{ color: "var(--text-tertiary)" }}>$</span>{" "}
+                  <span style={{ color: "var(--accent)" }}>cat</span> bio.txt
+                </div>
+                <div>{t.about.shellBioLine1}</div>
+                <div>{t.about.shellBioLine2}</div>
+                <div className="h-3" />
+                <div>
+                  <span style={{ color: "var(--text-tertiary)" }}>$</span>{" "}
+                  <span style={{ color: "var(--accent)" }}>status</span> --now
+                </div>
+                <div>
+                  <span style={{ color: "var(--accent)" }}>●</span>{" "}
+                  {t.about.shellStatus1}
+                </div>
+                <div>
+                  <span style={{ color: "var(--accent-3, #ffc46b)" }}>●</span>{" "}
+                  {t.about.shellStatus2}
+                </div>
+              </div>
+            </DossierPanel>
+          </div>
+
+          {/* ===== 06 描边引言 ===== */}
+          <div
+            data-stagger-item
+            className="min-w-0 lg:col-span-5"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <DossierPanel
+              index="05"
+              label="SIGNAL"
+              depth={DEPTH.signal}
+              accent="var(--accent-2, #ff3ec9)"
+              className="h-full"
+              bodyClassName="relative flex flex-1 flex-col justify-center p-5"
+            >
+              <span
+                aria-hidden
+                className="absolute left-4 top-1 select-none text-[88px] leading-none"
+                style={{
+                  color: "var(--accent)",
+                  opacity: 0.12,
+                  fontFamily: "Georgia, 'Times New Roman', serif",
+                }}
+              >
+                “
+              </span>
+              <blockquote className="relative">
+                <p
+                  style={{
+                    fontSize: "clamp(1.05rem, 2.1vw, 1.65rem)",
+                    lineHeight: 1.45,
+                    fontWeight: 600,
+                    letterSpacing: "-0.01em",
+                    color:
+                      "color-mix(in srgb, var(--text-primary) 16%, transparent)",
+                    WebkitTextStroke:
+                      "1px var(--text-secondary)",
+                  }}
+                >
+                  {t.about.quote}
+                </p>
+                <footer
+                  className="mt-3 font-mono text-[9px] uppercase tracking-[0.32em]"
+                  style={{ color: "var(--accent)" }}
+                >
+                  — trfox.top
+                </footer>
+              </blockquote>
+            </DossierPanel>
           </div>
         </StaggerGroup>
       </div>

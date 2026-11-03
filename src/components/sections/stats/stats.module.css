@@ -1,0 +1,271 @@
+/* ============================================================
+ * STATS — telemetry gauges / VOID PROTOCOL
+ * 仪表卡片的持续扫描、骨架呼吸、以及仪表环的过渡。
+ * 颜色一律取自 globals.css token；每张卡通过内联 --hud 指定主题色，
+ * 其余规则用 color-mix 从 --hud 派生，避免为四种颜色复制四套样式。
+ * ============================================================ */
+
+.card {
+  --hud: var(--accent);
+  position: relative;
+  overflow: hidden;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--border-subtle);
+  background: linear-gradient(
+    160deg,
+    var(--surface-strong),
+    var(--surface) 62%
+  );
+  isolation: isolate;
+  transition:
+    border-color 0.45s ease,
+    box-shadow 0.45s ease,
+    background 0.45s ease;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 2px,
+    rgba(0, 0, 0, 0.16) 2px 3px
+  );
+  opacity: 0.35;
+}
+
+/* 常驻能量扫掠：低频自上而下滚过，hover 时提速 */
+.card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -32%;
+  height: 32%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in oklab, var(--hud) 16%, transparent),
+    transparent
+  );
+  animation: cardSweep 7.5s linear infinite;
+}
+
+.card:hover {
+  border-color: color-mix(in oklab, var(--hud) 55%, transparent);
+  box-shadow:
+    0 0 48px -22px var(--hud),
+    inset 0 0 26px -20px var(--hud);
+}
+
+.card:hover::after {
+  animation-duration: 3.2s;
+}
+
+.topRow {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.index {
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--text-tertiary);
+  padding-top: 4px;
+}
+
+/* 仪表环：SVG 静态线宽，进度用 stroke-dasharray 跟随 count-up 数值 */
+.gauge {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+}
+
+.gauge svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.gaugeIcon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.valueRow {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  margin-top: -4px;
+}
+
+.value {
+  font-size: clamp(1.85rem, 4.2vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.suffix {
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.label {
+  position: relative;
+  margin-top: 7px;
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 9px;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  min-height: 2.8em;
+}
+
+/* 迷你频谱条：高度由 id 的确定性哈希生成，动画只做 scaleY */
+.sparkRow {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 30px;
+  margin-top: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.bar {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-radius: 1px 1px 0 0;
+  transform: scaleY(0.12);
+  transform-origin: 50% 100%;
+}
+
+/* 底部细刻度，强化 HUD 读数感 */
+.sparkAxis {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}
+
+/* ---------- 骨架 ---------- */
+
+.skeletonBar {
+  display: block;
+  background: var(--surface-strong);
+  border-radius: 1px;
+  animation: skeletonPulse 1.6s ease-in-out infinite;
+}
+
+.skeletonRing {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  border-top-color: var(--accent-border);
+  animation: skeletonSpin 2.4s linear infinite;
+}
+
+/* ---------- 尾部附加读数 ---------- */
+
+.extraList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 22px;
+}
+
+.extra {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.extraKey {
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  opacity: 0.7;
+  align-self: center;
+}
+
+.extraValue {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.extraLabel {
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+/* ---------- keyframes ---------- */
+
+@keyframes cardSweep {
+  0% {
+    transform: translateY(0);
+  }
+  55%,
+  100% {
+    transform: translateY(420%);
+  }
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes skeletonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card::after,
+  .skeletonBar,
+  .skeletonRing {
+    animation: none !important;
+    transition: none !important;
+  }
+  .bar {
+    transform: none;
+  }
+}

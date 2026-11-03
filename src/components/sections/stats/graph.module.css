@@ -1,0 +1,203 @@
+/* ============================================================
+ * CONTRIBUTION GRAPH — HUD 扫描面板 / VOID PROTOCOL
+ * 单元格尺寸/间距与组件里的 CELL/GAP 常量必须一致（轴标签按像素定位）。
+ * ============================================================ */
+
+.panel {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 16px 14px;
+  border: 1px solid var(--border-subtle);
+  background: linear-gradient(
+    165deg,
+    var(--surface-strong),
+    transparent 58%
+  );
+  isolation: isolate;
+}
+
+/* 常驻扫描线：极细的横向栅格，弱化面布质感 */
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 2px,
+    rgba(0, 0, 0, 0.14) 2px 3px
+  );
+  opacity: 0.4;
+}
+
+.header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-left: 2px;
+  margin-bottom: 12px;
+}
+
+.label {
+  display: block;
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 9px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.total {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* hover 读数：固定最小高度 + 单行省略，避免文案长短切换时整块图面跳动 */
+.readout {
+  max-width: 56%;
+  min-height: 1.4em;
+  text-align: right;
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scroll {
+  position: relative;
+}
+
+.weekdays {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 22px;
+  padding-right: 4px;
+  text-align: right;
+}
+
+.weekday {
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 8px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.months {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.month {
+  position: absolute;
+  top: 0;
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.plot {
+  position: relative;
+}
+
+.cell {
+  border-radius: 2px;
+  cursor: crosshair;
+  transition: box-shadow 0.18s ease;
+  /* 高等级格子的外发光放在 CSS 里（data-level），
+     否则会被组件里的内联样式覆盖，hover 高亮就失效了 */
+}
+
+.cell[data-level="2"] {
+  box-shadow: 0 0 4px color-mix(in oklab, var(--accent) 30%, transparent);
+}
+
+.cell[data-level="3"] {
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.cell[data-level="4"] {
+  box-shadow: 0 0 9px var(--accent-glow);
+}
+
+.cell:hover {
+  /* box-shadow 在 hover 时压过等级发光，给出明确的指针反馈 */
+  box-shadow:
+    0 0 0 1px var(--text-primary),
+    0 0 9px var(--accent-glow);
+}
+
+/* 扫描带裁切层：只在图面范围内扫过，不污染 hover 读数 */
+.beamClip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.beam {
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  width: 120px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--accent) 15%, transparent),
+    transparent
+  );
+  mix-blend-mode: screen;
+  animation: graphBeam 8s linear infinite;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-top: 10px;
+  font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, monospace);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.legendCell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+@keyframes graphBeam {
+  from {
+    transform: translateX(-140px);
+  }
+  to {
+    transform: translateX(900px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beam {
+    animation: none !important;
+  }
+  .cell {
+    transition: none !important;
+  }
+}

@@ -14,6 +14,12 @@ export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "teror-fox-theme";
 
+/** 浏览器 UI（地址栏 / PWA）主题色，与 globals.css 的 --background 保持一致 */
+const THEME_COLORS: Record<Theme, string> = {
+  dark: "#03040a",
+  light: "#e9eef6",
+};
+
 interface ThemeContextValue {
   theme: Theme;
   setTheme: (theme: Theme) => void;
@@ -62,6 +68,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.setAttribute("data-theme", theme);
     // 保留 .light-theme 类名以兼容旧 CSS 引用
     root.classList.toggle("light-theme", theme === "light");
+    // 原生控件（滚动条 / 表单 / 选区）跟随主题，避免暗色底上出现亮色控件
+    root.style.colorScheme = theme;
+
+    // 同步浏览器 UI 主题色（移动端地址栏 / PWA）；layout.tsx 未预置该 meta，故按需创建
+    let meta = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]'
+    );
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+    meta.content = THEME_COLORS[theme];
+
     try {
       window.localStorage.setItem(STORAGE_KEY, theme);
     } catch {

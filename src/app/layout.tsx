@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import { HTML_LANG } from "@/i18n/config";
 import { getRequestDictionary, getRequestLocale } from "@/i18n/server";
-import { OpenPanelComponent } from '@openpanel/nextjs';
 
 /**
  * metadata 随请求语言变化，因此用 generateMetadata 而非静态 metadata 对象。

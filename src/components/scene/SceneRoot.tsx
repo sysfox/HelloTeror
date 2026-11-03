@@ -49,10 +49,6 @@ const ThreeField = dynamic(
   () => import("./ThreeField").then((mod) => mod.ThreeField),
   { ssr: false }
 );
-const ThreeUILayer = dynamic(
-  () => import("./ThreeUILayer").then((mod) => mod.ThreeUILayer),
-  { ssr: false }
-);
 
 /** 纯 CSS 兜底：即使 JS / GPU 全部失败，也有一张符合 VOID 语言的静态背景 */
 function SceneFallback({
@@ -138,7 +134,7 @@ function SceneFallback({
   );
 }
 
-/** 最上层的 HUD 质感：扫描线 + 暗角，与具体渲染后端无关 */
+/** 最上层暗角：压住边缘，保证正文对比度 */
 function SceneOverlay({ theme }: { theme: Theme }) {
   const dark = theme === "dark";
   return (
@@ -147,7 +143,7 @@ function SceneOverlay({ theme }: { theme: Theme }) {
       aria-hidden="true"
       style={{
         background: dark
-          ? "repeating-linear-gradient(0deg, rgba(230,247,255,0.022) 0px, rgba(230,247,255,0.022) 1px, transparent 1px, transparent 3px), radial-gradient(120% 105% at 50% 50%, transparent 42%, rgba(0,0,0,0.5) 100%)"
+          ? "radial-gradient(120% 105% at 50% 50%, transparent 42%, rgba(0,0,0,0.5) 100%)"
           : "radial-gradient(120% 105% at 50% 50%, transparent 46%, rgba(16, 36, 66, 0.12) 100%)",
         mixBlendMode: "normal",
       }}
@@ -190,15 +186,13 @@ export function SceneRoot({ className = "" }: { className?: string }) {
   return (
     <div
       className={`pointer-events-none fixed inset-0 -z-10 overflow-hidden ${className}`}
+      style={{ opacity: theme === "dark" ? 0.18 : 0.14 }}
       aria-hidden="true"
     >
       <style>{SCENE_CSS}</style>
 
       {/* 1. 永远存在的 CSS 兜底 */}
       <SceneFallback mood={mood} theme={theme} reduced={reduced} />
-
-      {/* 2. ThreeUI 强调层：在 3D 画布之下，靠画布的透明通道透出 */}
-      {!reduced ? <ThreeUILayer /> : null}
 
       {/* 3. WebGPU 优先；失败自动切 WebGL */}
       {!reduced && mode === "vgpu" ? (
@@ -209,7 +203,7 @@ export function SceneRoot({ className = "" }: { className?: string }) {
       {/* 3.5 移动端雾化衬底：只在窄屏生效，压暗 shader 光核以保证正文对比度 */}
       <div className="scene-scrim" aria-hidden="true" />
 
-      {/* 4. 与后端无关的 HUD 叠层 */}
+      {/* 4. 与后端无关的暗角叠层 */}
       <SceneOverlay theme={theme} />
     </div>
   );

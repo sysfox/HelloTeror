@@ -18,23 +18,30 @@ export type PageId =
   | "blog";
 
 /**
- * anime.js 驱动的切换动画（kinetic-tech 风格）：
- *  - curtain    强调色幕布横扫覆盖→揭示（两段式，融合站点主色）
- *  - zoom-blur  缩放+模糊交叉淡入淡出（一段式，电影感）
- *  - type-wipe  幕布上印目标页超大词标，与幕布反向视差掠过（两段式，拍板感）
- *  - slats      竖条百叶窗逐条覆盖再逐条揭开（两段式，机械感）
+ * 页面切换类型（VOID PROTOCOL 的"镜头运动"）。
+ *
+ * 旧版的 curtain / zoom-blur / type-wipe / slats 已整体替换。新转场全部带 Z 轴纵深，
+ * 页面切换读作镜头在深空中运动，而不是两块平面淡入淡出：
+ *  - depth-dive    旧页向镜头外冲出，新页从深空 Z=-2000 拉回；同心环隧道 overlay
+ *  - fracture      屏幕按 4×3 多边形碎片裂开飞出；新页带色差显影
+ *  - warp-tunnel   径向速度线 + 中点白闪；旧页被吸入中心，新页从中心炸开
+ *  - lattice-wipe  线框平面自上而下横扫，旧页被"切片"带走，新页自下浮起
  *
  * forward / backward 方向由 navigate 时按 PAGE_ORDER 索引判定，
- * 影响幕布类切换的覆盖方向。
+ * 决定每种转场的扫过方向（forward = 左→右 / 上→下，backward 反之）。
  *
  * 新增类型需同步四处：本联合类型、TRANSITION_CYCLE、
  * pageTransitions.ts 的 TRANSITION_DURATIONS（Record 完备性会强制）与 runTransition，
  * 以及 PageShell 里对应的 overlay DOM。
  */
-export type TransitionType = "curtain" | "zoom-blur" | "type-wipe" | "slats";
+export type TransitionType =
+  | "depth-dive"
+  | "fracture"
+  | "warp-tunnel"
+  | "lattice-wipe";
 
 /**
- * 页面顺序常量（用于判断 forward / backward 方向以决定 curtain 方向）
+ * 页面顺序常量（用于判断 forward / backward 方向以决定转场方向）
  */
 export const PAGE_ORDER: PageId[] = [
   "home",
@@ -46,14 +53,15 @@ export const PAGE_ORDER: PageId[] = [
 ];
 
 /**
- * 循环序列：按顺序轮换，避免连续切换单调。
- * 排列上让"幕布类"与"非幕布类"交替出现，节奏对比更明显。
+ * 循环序列：每次切换前进一格，避免连续切换单调。
+ * 排列上让"整体缩放类"（depth-dive / warp-tunnel）与
+ * "遮挡/切片类"（fracture / lattice-wipe）交替出现，节奏对比更明显。
  */
 const TRANSITION_CYCLE: TransitionType[] = [
-  "curtain",
-  "zoom-blur",
-  "type-wipe",
-  "slats",
+  "depth-dive",
+  "fracture",
+  "warp-tunnel",
+  "lattice-wipe",
 ];
 
 interface PageContextValue {
@@ -64,7 +72,7 @@ interface PageContextValue {
   /**
    * 是否正在切换。由 PageShell 写入（它拥有 enter/exit 两层的时序），
    * 上提到 context 是为了让 PageShell 之外的持久层也能参与转场
-   *（目前的消费者：AuroraBackground 的转场脉冲）。
+   *（消费者：背景场景 / HUD 层的转场脉冲）。
    */
   transitioning: boolean;
   setTransitioning: (value: boolean) => void;

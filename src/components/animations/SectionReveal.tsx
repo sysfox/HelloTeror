@@ -11,8 +11,11 @@ import {
 
 /**
  * section 开场时间线协调器：mount 时用 createTimeline 编排
- *   强调线绘制（[data-reveal-line]）→ 子项错峰入场（[data-reveal]）
+ *   强调线绘制（[data-reveal-line]）→ 子项错峰「材质化」入场（[data-reveal]）
  * 节点间用相对时间 -={overlap} 衔接，让每次切页都有"开场动作"。
+ *
+ * 入场沿用 VOID PROTOCOL 纵深语言：translateZ 从深处拉回 + blur 对焦，
+ * 根节点挂 perspective 提供透视。transform/opacity/filter 均不触发布局。
  *
  * FOUC：根挂 section-reveal，CSS 把 [data-reveal]/[data-reveal-line] 置初始隐态。
  * reduced-motion CSS 兜底显示。直接子级应为「普通元素」；自驱动画组件
@@ -68,8 +71,16 @@ export function SectionReveal({
           {
             opacity: [0, 1],
             translateY: [y, 0],
+            translateZ: [-80, 0],
+            filter: ["blur(10px)", "blur(0px)"],
             duration,
             delay: stagger(staggerMs),
+            // 终态撤掉 blur(0px) 的 inline filter，避免永久建立 backdrop root
+            onComplete: () => {
+              items.forEach((item) => {
+                item.style.filter = "";
+              });
+            },
           },
           line ? `-=${overlap}` : startDelay
         );
@@ -80,7 +91,11 @@ export function SectionReveal({
   }, [staggerMs, overlap, y, duration, startDelay, lineSelector, itemSelector]);
 
   return (
-    <div ref={rootRef} className={`section-reveal ${className}`}>
+    <div
+      ref={rootRef}
+      className={`section-reveal ${className}`}
+      style={{ perspective: "1200px" }}
+    >
       {children}
     </div>
   );

@@ -2,20 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy, Check } from "lucide-react";
-import { prefersReducedMotion } from "@/lib/anime";
+import { animate, prefersReducedMotion } from "@/lib/anime";
 import { useT } from "@/contexts/LocaleContext";
 
 /**
- * 终端命令块（animejs.com 风格 + 语法高亮 + 逐行打字机）：
+ * 终端命令块（VOID PROTOCOL / CRT 磷光终端）：
  *  - 多行终端会话（whoami / cat about.md / ls skills/ / status --now）
- *  - 语法高亮：prompt(accent) / 命令(primary) / 输出(secondary) / 状态(green)
+ *  - 语法高亮：prompt(accent) / 命令(primary) / 输出(secondary) / 状态(amber)
  *  - 逐行逐字打字机：行间 250ms 停顿，字符间 38~60ms 随机
- *  - 闪烁光标（.terminal-cursor）跟随当前打字位置，完成后停在末尾
- *  - 标题栏三色圆点 + 复制按钮（复制完整会话）
- *  - 同心圆角：外层 rounded-xl，标题栏/内容内嵌
- *  - reduced-motion：直接显示完整会话，无打字机
+ *  - 闪烁块光标（.terminal-cursor）跟随当前打字位置，完成后停在末尾
+ *  - CRT 扫描线覆盖层 + 暗角 + 极慢下移的扫描纹理（持续呼吸感）
+ *  - HUD 标题栏：三枚信号色方点 + 会话标识 + 复制按钮
+ *  - reduced-motion：直接显示完整会话、无打字机、无扫描线漂移
  *
  * 由父级传入 startDelay 控制打字开始时机（与 Hero 入场时序串联）。
+ * props 与旧版完全一致（startDelay / className）。
  */
 
 type Line =
@@ -31,6 +32,10 @@ type RenderedLine = {
   accent?: boolean;
 };
 
+/** 扫描线纹理：1px 亮线 + 3px 间隔，1 个周期 4px（背景位移循环用） */
+const SCANLINE_BG =
+  "repeating-linear-gradient(180deg, rgba(90,242,255,0.055) 0px, rgba(90,242,255,0.055) 1px, transparent 1px, transparent 4px)";
+
 export function TerminalBlock({
   startDelay = 0,
   className = "",
@@ -42,6 +47,7 @@ export function TerminalBlock({
   const [lines, setLines] = useState<RenderedLine[]>([]);
   const [copied, setCopied] = useState(false);
   const timersRef = useRef<number[]>([]);
+  const crtRef = useRef<HTMLDivElement>(null);
 
   // 会话内容随语言变化：命令本身属于"代码"不翻译，只翻译输出行。
   // session 作为下方 effect 的依赖 → 切换语言时重播打字机，
@@ -81,6 +87,28 @@ export function TerminalBlock({
         .join("\n"),
     [session]
   );
+
+  // CRT 扫描纹理极慢下移：只改 background-position，不动布局；
+  // 4px 周期循环，首尾无缝，避免可见跳变。
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    const el = crtRef.current;
+    if (!el) return;
+
+    const proxy = { p: 0 };
+    const a = animate(proxy, {
+      p: 1,
+      duration: 6000,
+      loop: true,
+      ease: "linear",
+      onUpdate: () => {
+        el.style.backgroundPositionY = `${proxy.p * 4}px`;
+      },
+    });
+    return () => {
+      a.revert();
+    };
+  }, []);
 
   useEffect(() => {
     const timers = timersRef.current;
@@ -172,41 +200,59 @@ export function TerminalBlock({
 
   return (
     <div
-      className={`relative rounded-xl overflow-hidden theme-transition ${className}`}
+      className={`relative rounded-lg overflow-hidden theme-transition ${className}`}
       style={{
-        background: "var(--terminal-bg)",
+        background: "var(--terminal-bg, #050810)",
         border: "1px solid var(--border-subtle)",
-        boxShadow: "var(--shadow-card)",
+        boxShadow:
+          "var(--shadow-card), inset 0 0 70px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(90,242,255,0.04)",
       }}
     >
-      {/* 标题栏：三色圆点 + 标题 + 复制按钮 */}
+      {/* 标题栏：信号色方点 + 会话标识 + 复制按钮 */}
       <div
-        className="flex items-center gap-2 px-3 h-9 border-b"
-        style={{ borderColor: "var(--border-subtle)" }}
+        className="relative z-[2] flex items-center gap-2 px-3 h-9 border-b"
+        style={{
+          borderColor: "var(--border-subtle)",
+          background: "var(--surface)",
+        }}
       >
-        <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#ff5f56" }} />
-        <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#ffbd2e" }} />
-        <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#27c93f" }} />
         <span
-          className="ml-2 text-[11px] font-mono tabular-nums"
-          style={{ color: "var(--text-tertiary)" }}
+          className="w-1.5 h-1.5"
+          style={{ background: "var(--accent, #5af2ff)" }}
+        />
+        <span
+          className="w-1.5 h-1.5"
+          style={{ background: "var(--accent-3, #ffc46b)" }}
+        />
+        <span
+          className="w-1.5 h-1.5"
+          style={{ background: "var(--accent-2, #ff3ec9)" }}
+        />
+        <span
+          className="ml-2 text-[10px] font-mono uppercase tabular-nums"
+          style={{ color: "var(--text-tertiary)", letterSpacing: "0.16em" }}
         >
-          ~/teror-fox — zsh
+          TF://TERMINAL — SESSION 0x7F
         </span>
         <button
           type="button"
           onClick={copy}
-          className="ml-auto inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors hover:bg-[var(--surface-hover)]"
+          className="ml-auto inline-flex items-center justify-center w-7 h-7 rounded-sm transition-colors hover:bg-[var(--surface-hover)]"
           style={{ color: "var(--text-tertiary)" }}
           aria-label={t.a11y.copyTerminal}
         >
           {copied ? <Check size={13} /> : <Copy size={13} />}
         </button>
       </div>
+
       {/* 内容：逐行渲染 + 语法高亮 */}
       <div
-        className="px-3 py-3 text-[13px] sm:text-[14px] font-mono leading-relaxed whitespace-pre-wrap break-words"
-        style={{ color: "var(--text-secondary)", minHeight: "13rem" }}
+        className="relative z-[1] px-3 py-3 text-[13px] sm:text-[14px] font-mono leading-relaxed whitespace-pre-wrap break-words"
+        style={{
+          color: "var(--text-secondary)",
+          minHeight: "13rem",
+          textShadow: "0 0 12px rgba(90,242,255,0.08)",
+        }}
       >
         {lines.map((line, i) => {
           const isLast = i === lines.length - 1;
@@ -216,12 +262,17 @@ export function TerminalBlock({
           if (line.type === "prompt") {
             return (
               <div key={i}>
-                <span style={{ color: "var(--accent)" }}>{PROMPT_PREFIX}</span>
+                <span style={{ color: "var(--accent, #5af2ff)" }}>
+                  {PROMPT_PREFIX}
+                </span>
                 <span style={{ color: "var(--text-primary)" }}>{line.typed}</span>
                 {isLast && (
                   <span
                     className="terminal-cursor"
-                    style={{ color: "var(--accent)" }}
+                    style={{
+                      color: "var(--accent, #5af2ff)",
+                      textShadow: "0 0 10px var(--accent-glow)",
+                    }}
                     aria-hidden
                   >
                     ▋
@@ -235,7 +286,12 @@ export function TerminalBlock({
             <div key={i}>
               <span
                 style={{
-                  color: line.accent ? "#28c840" : "var(--text-secondary)",
+                  color: line.accent
+                    ? "var(--accent-3, #ffc46b)"
+                    : "var(--text-secondary)",
+                  textShadow: line.accent
+                    ? "0 0 14px rgba(255,196,107,0.35)"
+                    : undefined,
                 }}
               >
                 {line.typed}
@@ -243,7 +299,10 @@ export function TerminalBlock({
               {isLast && (
                 <span
                   className="terminal-cursor"
-                  style={{ color: "var(--accent)" }}
+                  style={{
+                    color: "var(--accent, #5af2ff)",
+                    textShadow: "0 0 10px var(--accent-glow)",
+                  }}
                   aria-hidden
                 >
                   ▋
@@ -253,6 +312,22 @@ export function TerminalBlock({
           );
         })}
       </div>
+
+      {/* CRT 扫描线 + 暗角：覆盖整块，不拦截交互 */}
+      <div
+        ref={crtRef}
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-[3]"
+        style={{ backgroundImage: SCANLINE_BG, opacity: 0.9 }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-[3]"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, transparent 68%, rgba(0,0,0,0.26) 100%)",
+        }}
+      />
     </div>
   );
 }

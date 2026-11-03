@@ -39,7 +39,7 @@ export function PageLoader() {
         position: "fixed",
         inset: 0,
         zIndex: 10000,
-        background: "#000000",
+        background: "var(--background)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -54,7 +54,7 @@ export function PageLoader() {
           position: "relative",
           width: phase === "expand" ? "0px" : "120px",
           height: "1px",
-          background: "rgba(245,245,247,0.2)",
+          background: "var(--border-subtle)",
           transition: "width 700ms cubic-bezier(0.16,1,0.3,1)",
           overflow: "hidden",
         }}
@@ -67,8 +67,8 @@ export function PageLoader() {
             height: "100%",
             width: phase === "expand" ? "0%" : "100%",
             background:
-              "linear-gradient(90deg, rgba(41,151,255,0) 0%, #2997ff 50%, rgba(255,255,255,0.9) 100%)",
-            boxShadow: "0 0 8px rgba(41,151,255,0.6)",
+              "linear-gradient(90deg, transparent 0%, var(--accent) 50%, var(--text-primary) 100%)",
+            boxShadow: "0 0 8px var(--accent-glow)",
             transition:
               "width 600ms cubic-bezier(0.65,0,0.35,1) 200ms",
           }}

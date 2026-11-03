@@ -1,2 +1,6 @@
 allowBuilds:
+  # vgpu 的 Node/Dawn 适配器仅用于 headless 渲染，本项目只用浏览器端 WebGPU，
+  # 因此禁用其原生构建脚本（避免 CI 在无 Dawn 环境时执行编译）。
+  '@vgpu/adapter-node': false
+  webgpu: false
   sharp: true

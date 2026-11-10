@@ -19,8 +19,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit"
   },
   "dependencies": {
-    "@fontsource/fraunces": "^5.2.9",
-    "@fontsource/outfit": "^5.2.8",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/ma-shan-zheng": "^5.3.1",
+    "@fontsource/qwitcher-grypen": "^5.3.0",
     "@hono/node-server": "^1.19.6",
     "hono": "^4.10.4",
     "react": "^19.2.0",

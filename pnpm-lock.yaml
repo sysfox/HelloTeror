@@ -8,11 +8,14 @@ importers:
 
   .:
     dependencies:
-      '@fontsource/fraunces':
-        specifier: ^5.2.9
+      '@fontsource/inter':
+        specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource/outfit':
-        specifier: ^5.2.8
+      '@fontsource/ma-shan-zheng':
+        specifier: ^5.3.1
+        version: 5.3.1
+      '@fontsource/qwitcher-grypen':
+        specifier: ^5.3.0
         version: 5.3.0
       '@hono/node-server':
         specifier: ^1.19.6
@@ -452,11 +455,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@fontsource/fraunces@5.3.0':
-    resolution: {integrity: sha512-LEHTOBiZufQzAvnAe2rZ8ZknbDS28Q9kzwb0L+gZJEmjLGr8hhZ/5NuHXwDuHBWhVXYoiGGXmrb0H6Ko/RrHTg==}
+  '@fontsource/inter@5.3.0':
+    resolution: {integrity: sha512-RofMylZmjlJEfELXeNHFWBRcSs75rGU/6bV2S2jfnvv/3rPXPGe0LgUJTklcHZ9lM4OZmAVFhcJPnACfb91A3g==}
 
-  '@fontsource/outfit@5.3.0':
-    resolution: {integrity: sha512-0AVHzTTVJSxWDOxPKSfMeHhZeBFDU3cmgrcOb76ZEyhGo0+xgyG3GsLF3h9+X8w0IX7G4jzjJgFQEBiWdX6VgA==}
+  '@fontsource/ma-shan-zheng@5.3.1':
+    resolution: {integrity: sha512-cGGn7Yje2RSduXVxEk+rCfNZyD/T/7FMGj03LNPiK8TRL9Sing0tq1zJF3n+W29szPqgb2RNs5oIvmm+ikeI+Q==}
+
+  '@fontsource/qwitcher-grypen@5.3.0':
+    resolution: {integrity: sha512-+oNEcs0A2nfVOlY4kPBgTlsQb/MWZhgDsGyk+C/CwNTcL8aej9wuYr5Y9xyi0ZQk11+9NnZfrgv4dIVuzykyJQ==}
 
   '@hono/node-server@1.19.18':
     resolution: {integrity: sha512-609kppIP9GITS+EwPyB6Kiq8z2yXONaYD1VHpo7MMP9celRJYbkFr9KakJncHwK0EK/XYtlogqmrLchDv5HX5w==}
@@ -1222,9 +1228,11 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@fontsource/fraunces@5.3.0': {}
+  '@fontsource/inter@5.3.0': {}
 
-  '@fontsource/outfit@5.3.0': {}
+  '@fontsource/ma-shan-zheng@5.3.1': {}
+
+  '@fontsource/qwitcher-grypen@5.3.0': {}
 
   '@hono/node-server@1.19.18(hono@4.13.17)':
     dependencies:

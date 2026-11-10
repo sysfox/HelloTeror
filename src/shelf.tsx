@@ -50,7 +50,7 @@ export function Shelf({ copy, locale }: { copy: Copy; locale: Locale }) {
   return (
     <div className="shelf">
       <div className="shelf-head">
-        <h2>{copy.shelfTitle}</h2>
+        <h2 className="script">{copy.shelfTitle}</h2>
         <p>{copy.shelfLead}</p>
         <div className="filters" role="tablist" aria-label={copy.shelfTitle}>
           {filters.map((item) => (
@@ -77,7 +77,7 @@ export function Shelf({ copy, locale }: { copy: Copy; locale: Locale }) {
       {query.state === "loading" && !query.data ? (
         <div className="shelf-grid" aria-hidden="true">
           {Array.from({ length: 6 }, (_, index) => (
-            <article key={index} className="frame shelf-card">
+            <article key={index} className="glass shelf-card">
               <div className="bones">
                 <span />
                 <span />
@@ -120,7 +120,7 @@ function ShelfCard({ card, copy, locale }: { card: Card; copy: Copy; locale: Loc
   if (card.kind === "writing") {
     const item = card.item
     return (
-      <article className="frame shelf-card">
+      <article className="glass shelf-card">
         {item.cover ? <img src={item.cover} alt="" loading="lazy" /> : null}
         <p className="kicker">{item.category}</p>
         <h3>
@@ -137,7 +137,7 @@ function ShelfCard({ card, copy, locale }: { card: Card; copy: Copy; locale: Loc
   if (card.kind === "note") {
     const item = card.item
     return (
-      <article className="frame shelf-card">
+      <article className="glass shelf-card">
         <p className="kicker">{copy.notes}</p>
         <h3>
           <a href={item.url} target="_blank" rel="noreferrer">
@@ -155,7 +155,7 @@ function ShelfCard({ card, copy, locale }: { card: Card; copy: Copy; locale: Loc
   if (card.kind === "repo") {
     const item = card.item
     return (
-      <article className="frame shelf-card">
+      <article className="glass shelf-card">
         <p className="kicker">
           <i className="lang" style={{ background: LANG[item.language ?? ""] ?? "#d4763a" }} />
           {item.language ?? copy.repoWord}
@@ -178,7 +178,7 @@ function ShelfCard({ card, copy, locale }: { card: Card; copy: Copy; locale: Loc
   const place = card.item
   const external = place.href.startsWith("http")
   return (
-    <article className="frame shelf-card">
+    <article className="glass shelf-card">
       <p className="kicker">{copy.places}</p>
       <h3>
         <a href={place.href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}>

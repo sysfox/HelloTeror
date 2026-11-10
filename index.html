@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="dusk" data-locale="zh">
+<html lang="zh-CN" data-theme="paper" data-locale="zh">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,13 +8,13 @@
       name="description"
       content="Teror Fox。人在南京，在河海读自动化，其余时间写代码、记笔记。"
     />
-    <meta name="theme-color" content="#141820" />
+    <meta name="theme-color" content="#f5f5f5" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>
       try {
         var theme = localStorage.getItem("teror-fox-theme")
         var locale = localStorage.getItem("teror-fox-locale")
-        if (theme !== "paper" && theme !== "dusk") theme = "dusk"
+        if (theme !== "paper" && theme !== "dusk") theme = "paper"
         if (locale !== "zh" && locale !== "en") {
           locale = (navigator.language || "").toLowerCase().indexOf("zh") === 0 ? "zh" : "en"
         }
@@ -23,7 +23,7 @@
         document.documentElement.lang = locale === "zh" ? "zh-CN" : "en"
         document.querySelector('meta[name="theme-color"]').setAttribute(
           "content",
-          theme === "paper" ? "#f3ecdf" : "#141820",
+          theme === "paper" ? "#f5f5f5" : "#0a0a0a",
         )
       } catch (e) {}
     </script>

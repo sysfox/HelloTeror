@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dusk" data-locale="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teror Fox — 抬头看星星</title>
+    <meta
+      name="description"
+      content="Teror Fox。人在南京，在河海读自动化，其余时间写代码、记笔记。"
+    />
+    <meta name="theme-color" content="#141820" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>
+      try {
+        var theme = localStorage.getItem("teror-fox-theme")
+        var locale = localStorage.getItem("teror-fox-locale")
+        if (theme !== "paper" && theme !== "dusk") theme = "dusk"
+        if (locale !== "zh" && locale !== "en") {
+          locale = (navigator.language || "").toLowerCase().indexOf("zh") === 0 ? "zh" : "en"
+        }
+        document.documentElement.dataset.theme = theme
+        document.documentElement.dataset.locale = locale
+        document.documentElement.lang = locale === "zh" ? "zh-CN" : "en"
+        document.querySelector('meta[name="theme-color"]').setAttribute(
+          "content",
+          theme === "paper" ? "#f3ecdf" : "#141820",
+        )
+      } catch (e) {}
+    </script>
+    <script
+      defer
+      src="https://umami.trfox.top/script.js"
+      data-website-id="c522847f-2a7f-58fe-87d7-22bf0d4bf765"
+    ></script>
+    <script
+      defer
+      src="https://umami.trfox.top/recorder.js"
+      data-website-id="c522847f-2a7f-58fe-87d7-22bf0d4bf765"
+    ></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <main class="noscript">
+        <h1>Teror Fox</h1>
+        <p>沟里的虫子，也有人要抬头看星星。</p>
+        <p>
+          <a href="https://blog.trfox.top">博客</a>
+          ·
+          <a href="https://github.com/sysfox">GitHub</a>
+          ·
+          <a href="mailto:i@trfox.top">i@trfox.top</a>
+        </p>
+      </main>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

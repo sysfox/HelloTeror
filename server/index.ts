@@ -1,24 +1,7 @@
 import { readFileSync, existsSync, statSync } from "node:fs"
 import { extname, join, normalize, sep } from "node:path"
 import { serve } from "@hono/node-server"
-import { Hono } from "hono"
-import { loadHome, loadShelf } from "./data.ts"
-
-const app = new Hono()
-
-app.get("/api/home", async (c) => {
-  const payload = await loadHome()
-  c.header("cache-control", "public, max-age=120")
-  return c.json(payload)
-})
-
-app.get("/api/shelf", async (c) => {
-  const payload = await loadShelf()
-  c.header("cache-control", "public, max-age=120")
-  return c.json(payload)
-})
-
-app.get("/api/health", (c) => c.json({ ok: true }))
+import { app } from "./app.ts"
 
 const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -52,6 +35,7 @@ function fileFor(urlPath: string): string | null {
 
 app.get("*", (c) => {
   if (process.env.NODE_ENV !== "production") return c.notFound()
+  if (c.req.path === "/api" || c.req.path.startsWith("/api/")) return c.notFound()
   const file = fileFor(c.req.path)
   if (!file) return c.notFound()
   const type = TYPES[extname(file)] ?? "application/octet-stream"

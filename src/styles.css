@@ -156,16 +156,18 @@ html[data-theme="dusk"] .wash::after { animation-name: twinkle-night; }
 .island {
   position: fixed;
   z-index: 40;
-  top: 50%;
-  left: 24px;
-  transform: translateY(-50%);
-  width: 65px;
-  padding: 10px 8px;
+  top: 16px;
+  left: 0;
+  right: 0;
+  width: fit-content;
+  height: 48px;
+  margin-inline: auto;
+  padding: 4px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  border-radius: 30px;
+  gap: 2px;
+  border-radius: 999px;
   background: var(--island);
   border: 2px solid var(--island-border);
   box-shadow: var(--shadow);
@@ -229,7 +231,7 @@ html[data-theme="dusk"] .nav-item.is-on {
   position: fixed;
   z-index: 40;
   top: 16px;
-  left: max(108px, calc((100% - var(--cluster)) / 2));
+  left: max(40px, calc((100% - var(--cluster)) / 2));
   min-width: 148px;
   height: 48px;
   padding: 0 16px 0 12px;
@@ -256,7 +258,7 @@ html[data-theme="dusk"] .nav-item.is-on {
   position: fixed;
   z-index: 40;
   top: 16px;
-  right: max(24px, calc((100% - var(--cluster)) / 2));
+  right: max(40px, calc((100% - var(--cluster)) / 2));
   height: 48px;
   padding: 4px;
   display: flex;
@@ -279,8 +281,8 @@ html[data-theme="dusk"] .nav-item.is-on {
 .cluster {
   position: relative;
   z-index: 1;
-  width: min(var(--cluster), calc(100% - 148px));
-  margin-left: max(108px, calc((100% - min(var(--cluster), 100% - 148px)) / 2));
+  width: min(var(--cluster), calc(100% - 80px));
+  margin-left: max(40px, calc((100% - min(var(--cluster), 100% - 80px)) / 2));
 }
 
 .cluster-home {
@@ -916,24 +918,13 @@ html[data-locale="zh"] .me-stats span { letter-spacing: 0; text-transform: none;
 }
 
 @media (max-width: 900px) {
-  .island {
-    top: auto;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: auto;
-    flex-direction: row;
-    height: 64px;
-    padding: 8px 10px;
-  }
-
   .cluster {
     width: min(100% - 20px, var(--cluster));
     margin-left: auto;
     margin-right: auto;
   }
 
-  .cluster-home { padding-bottom: 88px; justify-content: flex-start; padding-top: 76px; }
+  .cluster-home { padding-bottom: 28px; justify-content: flex-start; padding-top: 84px; }
 
   .script { font-size: 40px; }
 
@@ -1110,6 +1101,12 @@ html.settled .heat span {
 @media (max-width: 900px) {
   .wx-pill { left: 16px; }
   .pref-pill { right: 16px; }
+}
+
+@media (max-width: 560px) {
+  .island { top: 72px; }
+  .cluster-home,
+  .cluster-shelf { padding-top: 136px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

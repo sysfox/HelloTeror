@@ -1114,7 +1114,7 @@ html.settled .heat span {
   .pref-pill { right: 16px; }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 720px) {
   .island { top: 72px; }
   .cluster-home,
   .cluster-shelf { padding-top: 136px; }

@@ -9,7 +9,7 @@ pnpm install
 pnpm dev        # Vite 5173，代理 /api 到 Hono 8787
 pnpm typecheck
 pnpm test       # node:test，直接打 Hono app 和 Vercel 的 Node handler
-pnpm build      # 前端 dist/，接口 dist-server/index.js
+pnpm build      # 前端 dist/，本地接口 dist-server/index.js，Vercel 函数 api/[[...route]].js
 pnpm start      # NODE_ENV=production，同一端口提供页面和 /api
 ```
 
@@ -19,7 +19,7 @@ Node >= 22。包管理器是 pnpm。没有测试框架，提交前跑 `pnpm type
 
 - `shared/site.ts` 名字、链接、南京坐标。`shared/types.ts` 是接口形状。
 - `server/app.ts` 是 Hono 应用，只有 `/api/home`、`/api/shelf`、`/api/health`。`server/index.ts` 在本地 `listen`，生产时再把 `dist/` 补上。
-- `api/[[...route]].ts` 用 `@hono/node-server/vercel` 的 `handle` 把同一个 app 交给 Vercel 的 Node 函数。`vercel.json` 的 SPA 回退排除 `/api`。
+- `server/vercel.ts` 是 Vercel 的 Node handler。`pnpm build` 把它打成单个 `api/[[...route]].js` 并提交，函数运行时只依赖 `hono` 和 `@hono/node-server`，不再 import `.ts`。`vercel.json` 的 SPA 回退排除 `/api`。
 - `server/data.ts` 拉 MX-Space、GitHub、Open-Meteo，十分钟内存缓存。失败不编造格子。接口不读本地数据文件。
 - `src/copy.ts` 中英文各自写，不是逐句对译。
 - `src/App.tsx` 管夜色/纸上、语言、主页和架上两条路径。

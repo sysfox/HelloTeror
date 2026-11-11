@@ -1,11 +1,18 @@
 import assert from "node:assert/strict"
+import { execFileSync } from "node:child_process"
+import { mkdtempSync, readFileSync } from "node:fs"
 import { createServer } from "node:http"
 import type { AddressInfo } from "node:net"
 import { once } from "node:events"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { test } from "node:test"
-import handler from "../api/[[...route]].ts"
+import { fileURLToPath } from "node:url"
 import type { HomePayload, ShelfPayload } from "../shared/types.ts"
 import { app } from "./app.ts"
+
+const bundleUrl = new URL("../api/[[...route]].js", import.meta.url)
+const { default: handler } = await import(bundleUrl.href)
 
 function assertHome(body: HomePayload) {
   assert.equal(typeof body.generatedAt, "string")
@@ -49,6 +56,29 @@ test("GET /api/shelf returns the shelf payload", async () => {
 test("exported app does not serve the SPA shell", async () => {
   const response = await app.request("/shelf")
   assert.equal(response.status, 404)
+})
+
+test("deployed vercel bundle does not import TypeScript files", () => {
+  const committed = readFileSync(bundleUrl, "utf8")
+  const dir = mkdtempSync(join(tmpdir(), "vercel-fn-"))
+  const outfile = join(dir, "route.js")
+  execFileSync(
+    "pnpm",
+    [
+      "exec",
+      "esbuild",
+      "server/vercel.ts",
+      "--bundle",
+      "--platform=node",
+      "--format=esm",
+      "--packages=external",
+      `--outfile=${outfile}`,
+    ],
+    { cwd: fileURLToPath(new URL("..", import.meta.url)) },
+  )
+  assert.equal(committed, readFileSync(outfile, "utf8"))
+  assert.doesNotMatch(committed, /from\s+["'][^"']*\.ts["']/)
+  assert.doesNotMatch(committed, /from\s+["']\.\.?\//)
 })
 
 test("vercel handler serves /api/home and /api/shelf", async () => {

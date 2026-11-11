@@ -14,7 +14,7 @@
     "dev": "concurrently -k \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:api": "tsx watch server/index.ts",
     "dev:web": "vite --host 127.0.0.1 --port 5173",
-    "build": "pnpm typecheck && vite build && esbuild server/index.ts --bundle --platform=node --format=esm --outfile=dist-server/index.js --packages=external",
+    "build": "pnpm typecheck && vite build && esbuild server/index.ts --bundle --platform=node --format=esm --outfile=dist-server/index.js --packages=external && esbuild server/vercel.ts --bundle --platform=node --format=esm --packages=external --outfile=api/[[...route]].js",
     "start": "NODE_ENV=production node dist-server/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
     "test": "tsx --test server/api.test.ts"

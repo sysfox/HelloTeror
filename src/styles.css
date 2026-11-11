@@ -310,6 +310,17 @@ html[data-theme="dusk"] .nav-item.is-on {
   text-wrap: balance;
 }
 
+.motto { text-wrap: wrap; }
+
+.motto-clause {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .motto-clause { white-space: normal; }
+}
+
 html[data-locale="en"] .script {
   font-family: "Qwitcher Grypen", cursive;
   font-weight: 700;

@@ -45,7 +45,7 @@ export function Home({
 
   return (
     <>
-      <p className="script rise">{copy.motto}</p>
+      <p className="script motto rise">{mottoClauses(copy.motto)}</p>
       <div className="who rise">
         {github?.avatar ? (
           <img src={github.avatar} alt="" width={32} height={32} />
@@ -360,6 +360,17 @@ function WeatherCard({ weather, copy }: { weather: WeatherNow; copy: Copy }) {
       </div>
     </>
   )
+}
+
+function mottoClauses(text: string) {
+  return text
+    .split(/(?<=[，,])/)
+    .filter(Boolean)
+    .map((clause) => (
+      <span key={clause} className="motto-clause">
+        {clause}
+      </span>
+    ))
 }
 
 function WeatherArt({ code }: { code: number }) {

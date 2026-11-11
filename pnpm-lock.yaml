@@ -199,7 +199,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       '@vitejs/plugin-react':
         specifier: ^5.1.0
-        version: 5.2.0(vite@8.3.7(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15))
+        version: 5.2.0(supports-color@8.1.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15))
       concurrently:
         specifier: ^9.2.1
         version: 9.2.5
@@ -214,7 +214,7 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^8.0.0
-        version: 8.3.7(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15)
+        version: 8.3.8(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15)
 
 packages:
 
@@ -1091,8 +1091,8 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
-  vite@8.3.7:
-    resolution: {integrity: sha512-oxh0dMxrayBr33ScJvvBJ2HBQ2jc1TBrXKR2NyL/MJ9WPuX19mN2DXWUmywKdyw5RFVQBo8hmtb2FMC0LHrnng==}
+  vite@8.3.8:
+    resolution: {integrity: sha512-LzOn3h9rG/0vhLdXrV4yJ4QFA9eEoqCl+Yx+kGJd7aB9w6nfNgVHKSYwLPZUHrz4ZGa+t+kXjV9itvcHDLQouA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -1163,20 +1163,20 @@ snapshots:
 
   '@babel/compat-data@7.29.7': {}
 
-  '@babel/core@7.29.13':
+  '@babel/core@7.29.13(supports-color@8.1.1)':
     dependencies:
       '@babel/code-frame': 7.29.7
       '@babel/generator': 7.29.13
       '@babel/helper-compilation-targets': 7.29.13
-      '@babel/helper-module-transforms': 7.29.13(@babel/core@7.29.13)
+      '@babel/helper-module-transforms': 7.29.13(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1)
       '@babel/helpers': 7.29.13
       '@babel/parser': 7.29.13
       '@babel/template': 7.29.7
-      '@babel/traverse': 7.29.13
+      '@babel/traverse': 7.29.13(supports-color@8.1.1)
       '@babel/types': 7.29.11
       '@jridgewell/remapping': 2.3.5
       convert-source-map: 2.0.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@8.1.1)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.2
@@ -1201,19 +1201,19 @@ snapshots:
 
   '@babel/helper-globals@7.29.7': {}
 
-  '@babel/helper-module-imports@7.29.7':
+  '@babel/helper-module-imports@7.29.7(supports-color@8.1.1)':
     dependencies:
-      '@babel/traverse': 7.29.13
+      '@babel/traverse': 7.29.13(supports-color@8.1.1)
       '@babel/types': 7.29.11
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/helper-module-transforms@7.29.13(@babel/core@7.29.13)':
+  '@babel/helper-module-transforms@7.29.13(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@babel/core': 7.29.13
-      '@babel/helper-module-imports': 7.29.7
+      '@babel/core': 7.29.13(supports-color@8.1.1)
+      '@babel/helper-module-imports': 7.29.7(supports-color@8.1.1)
       '@babel/helper-validator-identifier': 7.29.7
-      '@babel/traverse': 7.29.13
+      '@babel/traverse': 7.29.13(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -1234,14 +1234,14 @@ snapshots:
     dependencies:
       '@babel/types': 7.29.11
 
-  '@babel/plugin-transform-react-jsx-self@7.29.7(@babel/core@7.29.13)':
+  '@babel/plugin-transform-react-jsx-self@7.29.7(@babel/core@7.29.13(supports-color@8.1.1))':
     dependencies:
-      '@babel/core': 7.29.13
+      '@babel/core': 7.29.13(supports-color@8.1.1)
       '@babel/helper-plugin-utils': 7.29.7
 
-  '@babel/plugin-transform-react-jsx-source@7.29.7(@babel/core@7.29.13)':
+  '@babel/plugin-transform-react-jsx-source@7.29.7(@babel/core@7.29.13(supports-color@8.1.1))':
     dependencies:
-      '@babel/core': 7.29.13
+      '@babel/core': 7.29.13(supports-color@8.1.1)
       '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/template@7.29.7':
@@ -1250,7 +1250,7 @@ snapshots:
       '@babel/parser': 7.29.13
       '@babel/types': 7.29.11
 
-  '@babel/traverse@7.29.13':
+  '@babel/traverse@7.29.13(supports-color@8.1.1)':
     dependencies:
       '@babel/code-frame': 7.29.7
       '@babel/generator': 7.29.13
@@ -1258,7 +1258,7 @@ snapshots:
       '@babel/parser': 7.29.13
       '@babel/template': 7.29.7
       '@babel/types': 7.29.11
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -1536,15 +1536,15 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@vitejs/plugin-react@5.2.0(vite@8.3.7(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15))':
+  '@vitejs/plugin-react@5.2.0(supports-color@8.1.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15))':
     dependencies:
-      '@babel/core': 7.29.13
-      '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.13)
-      '@babel/plugin-transform-react-jsx-source': 7.29.7(@babel/core@7.29.13)
+      '@babel/core': 7.29.13(supports-color@8.1.1)
+      '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.13(supports-color@8.1.1))
+      '@babel/plugin-transform-react-jsx-source': 7.29.7(@babel/core@7.29.13(supports-color@8.1.1))
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 8.3.7(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15)
+      vite: 8.3.8(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15)
     transitivePeerDependencies:
       - supports-color
 
@@ -1596,9 +1596,11 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  debug@4.4.3:
+  debug@4.4.3(supports-color@8.1.1):
     dependencies:
       ms: 2.1.3
+    optionalDependencies:
+      supports-color: 8.1.1
 
   detect-libc@2.1.2: {}
 
@@ -1845,7 +1847,7 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
-  vite@8.3.7(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15):
+  vite@8.3.8(@types/node@24.19.2)(esbuild@0.25.12)(tsx@4.23.15):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7

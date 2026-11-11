@@ -3,6 +3,7 @@
 
 :root,
 html[data-theme="paper"] {
+  --cluster: 1120px;
   --text: #1f2937;
   --text-dim: #6b7280;
   --text-soft: #9ca3af;
@@ -228,7 +229,7 @@ html[data-theme="dusk"] .nav-item.is-on {
   position: fixed;
   z-index: 40;
   top: 16px;
-  right: max(24px, calc((100% - 1240px) / 2));
+  right: max(24px, calc((100% - var(--cluster)) / 2));
   min-width: 148px;
   height: 48px;
   padding: 0 16px 0 12px;
@@ -254,8 +255,8 @@ html[data-theme="dusk"] .nav-item.is-on {
 .cluster {
   position: relative;
   z-index: 1;
-  width: min(1240px, calc(100% - 148px));
-  margin-left: max(108px, calc((100% - min(1240px, 100% - 148px)) / 2));
+  width: min(var(--cluster), calc(100% - 148px));
+  margin-left: max(108px, calc((100% - min(var(--cluster), 100% - 148px)) / 2));
 }
 
 .cluster-home {
@@ -435,8 +436,8 @@ html[data-locale="en"] .script {
 .d-i7 { grid-column: 5; grid-row: 2; }
 .d-i8 { grid-column: 6; grid-row: 2; }
 .d-gh { grid-column: 7 / span 4; grid-row: 1 / span 2; }
-.d-write { grid-column: 11 / span 4; grid-row: 1 / span 2; }
-.d-note { grid-column: 15 / span 2; grid-row: 1 / span 2; }
+.d-write { grid-column: 11 / span 3; grid-row: 1 / span 2; }
+.d-note { grid-column: 14 / span 3; grid-row: 1 / span 2; }
 .d-wx { grid-column: 1 / span 2; grid-row: 3 / span 2; }
 .d-where { grid-column: 3 / span 2; grid-row: 3 / span 2; }
 .d-me { grid-column: 5 / span 4; grid-row: 3 / span 2; }
@@ -890,11 +891,6 @@ html[data-locale="zh"] .me-stats span { letter-spacing: 0; text-transform: none;
   line-height: 1.7;
 }
 
-@media (max-width: 1180px) {
-  .d-write { grid-column: 11 / span 3; }
-  .d-note { grid-column: 14 / span 3; }
-}
-
 @media (max-width: 900px) {
   .island {
     top: auto;
@@ -908,7 +904,7 @@ html[data-locale="zh"] .me-stats span { letter-spacing: 0; text-transform: none;
   }
 
   .cluster {
-    width: min(100% - 20px, 1240px);
+    width: min(100% - 20px, var(--cluster));
     margin-left: auto;
     margin-right: auto;
   }

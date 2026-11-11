@@ -45,8 +45,8 @@ export function Home({
 
   return (
     <>
-      <p className="script">{copy.motto}</p>
-      <div className="who">
+      <p className="script rise">{copy.motto}</p>
+      <div className="who rise">
         {github?.avatar ? (
           <img src={github.avatar} alt="" width={32} height={32} />
         ) : (
@@ -60,7 +60,7 @@ export function Home({
 
       <div className="desk">
         <section className="glass glow card d-greet">
-          <div className="wave" aria-hidden="true">
+          <div className="wave greet-mark" aria-hidden="true">
             👋
           </div>
           <h1 className="greet">{copy.greet(hour)}</h1>
@@ -312,7 +312,10 @@ function Heat({
             <span
               key={`${weekIndex}-${dayIndex}`}
               title={title}
-              style={{ background: day ? `var(--heat-${level})` : "transparent" }}
+              style={{
+                background: day ? `var(--heat-${level})` : "transparent",
+                animationDelay: `${weekIndex * 28 + dayIndex * 16}ms`,
+              }}
             />
           )
         }),
@@ -360,7 +363,7 @@ function WeatherCard({ weather, copy }: { weather: WeatherNow; copy: Copy }) {
 }
 
 function WeatherArt({ code }: { code: number }) {
-  if (code >= 95 || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return <RainMark className="wave" />
-  if (code === 0 || code === 1) return <SunMark className="wave" />
-  return <CloudMark className="wave" />
+  if (code >= 95 || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return <RainMark className="wx-art" />
+  if (code === 0 || code === 1) return <SunMark className="wx-art" />
+  return <CloudMark className="wx-art" />
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import type { MouseEvent, ReactNode } from "react"
+import { flushSync } from "react-dom"
 import { SITE } from "../shared/site"
 import type { HomePayload } from "../shared/types"
 import { deskCopy, shanghaiHour, type Locale } from "./copy"
@@ -17,11 +18,23 @@ function readBoot(): { theme: Theme; locale: Locale } {
   return { theme, locale }
 }
 
+function play(apply: () => void) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  document.documentElement.classList.add("settled")
+  if (!reduce && typeof document.startViewTransition === "function") {
+    document.startViewTransition(() => {
+      flushSync(apply)
+    })
+    return
+  }
+  apply()
+}
+
 function usePath(): { path: string; go: (to: string) => void } {
   const [path, setPath] = useState(() => window.location.pathname)
 
   useEffect(() => {
-    const onPop = () => setPath(window.location.pathname)
+    const onPop = () => play(() => setPath(window.location.pathname))
     window.addEventListener("popstate", onPop)
     return () => window.removeEventListener("popstate", onPop)
   }, [])
@@ -31,17 +44,11 @@ function usePath(): { path: string; go: (to: string) => void } {
       window.scrollTo(0, 0)
       return
     }
-    const apply = () => {
+    play(() => {
       window.history.pushState(null, "", to)
       setPath(to)
       window.scrollTo(0, 0)
-    }
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    if (!reduce && typeof document.startViewTransition === "function") {
-      document.startViewTransition(apply)
-      return
-    }
-    apply()
+    })
   }
 
   return { path, go }
@@ -113,7 +120,7 @@ export function App() {
         <button
           className="nav-item"
           type="button"
-          onClick={() => setTheme(theme === "dusk" ? "paper" : "dusk")}
+          onClick={() => play(() => setTheme(theme === "dusk" ? "paper" : "dusk"))}
           aria-label={theme === "dusk" ? copy.toPaper : copy.toNight}
         >
           {theme === "dusk" ? <SunMark /> : <MoonMark />}
@@ -121,7 +128,7 @@ export function App() {
         <button
           className="nav-item nav-locale"
           type="button"
-          onClick={() => setLocale(locale === "zh" ? "en" : "zh")}
+          onClick={() => play(() => setLocale(locale === "zh" ? "en" : "zh"))}
           aria-label={locale === "zh" ? copy.toEnglish : copy.toChinese}
         >
           {locale === "zh" ? "EN" : "中"}

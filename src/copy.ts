@@ -4,6 +4,8 @@ export type Copy = {
   title: string
   navHome: string
   navShelf: string
+  navTimeline: string
+  navConsole: string
   toEnglish: string
   toChinese: string
   toPaper: string
@@ -56,6 +58,8 @@ const zh: Copy = {
   title: "Teror Fox — 抬头看星星",
   navHome: "主页",
   navShelf: "架上",
+  navTimeline: "时间线",
+  navConsole: "游戏机",
   toEnglish: "换成英文",
   toChinese: "换成中文",
   toPaper: "换成纸上",
@@ -108,6 +112,8 @@ const en: Copy = {
   title: "Teror Fox — some of us look up",
   navHome: "Home",
   navShelf: "Shelf",
+  navTimeline: "Timeline",
+  navConsole: "Console",
   toEnglish: "Switch to English",
   toChinese: "Switch to Chinese",
   toPaper: "Switch to paper",

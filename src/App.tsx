@@ -5,12 +5,19 @@ import { SITE } from "../shared/site"
 import type { HomePayload } from "../shared/types"
 import { deskCopy, shanghaiHour, type Locale } from "./copy"
 import { Home } from "./home"
-import { CloudMark, HomeMark, MoonMark, RainMark, ShelfMark, SunMark } from "./icons"
+import { CloudMark, ConsoleMark, HomeMark, MoonMark, RainMark, ShelfMark, SunMark, TimelineMark } from "./icons"
 import { Shelf } from "./shelf"
 import { useQuery } from "./useQuery"
 
 type Theme = "dusk" | "paper"
-type Page = "home" | "shelf"
+type Page = "home" | "shelf" | "timeline" | "console"
+
+const ROUTES: Record<string, Page> = {
+  "/": "home",
+  "/shelf": "shelf",
+  "/timeline": "timeline",
+  "/console": "console",
+}
 
 function readBoot(): { theme: Theme; locale: Locale } {
   const theme = document.documentElement.dataset.theme === "dusk" ? "dusk" : "paper"
@@ -61,7 +68,7 @@ export function App() {
   const { path, go } = usePath()
   const home = useQuery<HomePayload>("/api/home")
   const copy = deskCopy(locale)
-  const page: Page = path === "/shelf" ? "shelf" : "home"
+  const page: Page = ROUTES[path] ?? "home"
   const [hour, setHour] = useState(() => shanghaiHour())
 
   useEffect(() => {
@@ -94,7 +101,7 @@ export function App() {
     if (!href || href.startsWith("http") || href.startsWith("mailto:")) return
     const url = new URL(anchor.href, window.location.origin)
     if (url.origin !== window.location.origin) return
-    if (url.pathname !== "/" && url.pathname !== "/shelf") return
+    if (!(url.pathname in ROUTES)) return
     event.preventDefault()
     go(url.pathname)
   }
@@ -116,6 +123,14 @@ export function App() {
         <a className={page === "shelf" ? "nav-item is-on" : "nav-item"} href="/shelf" aria-current={page === "shelf" ? "page" : undefined}>
           <ShelfMark />
           <span className="sr">{copy.navShelf}</span>
+        </a>
+        <a className={page === "timeline" ? "nav-item is-on" : "nav-item"} href="/timeline" aria-current={page === "timeline" ? "page" : undefined}>
+          <TimelineMark />
+          <span className="sr">{copy.navTimeline}</span>
+        </a>
+        <a className={page === "console" ? "nav-item is-on" : "nav-item"} href="/console" aria-current={page === "console" ? "page" : undefined}>
+          <ConsoleMark />
+          <span className="sr">{copy.navConsole}</span>
         </a>
       </nav>
 
@@ -153,8 +168,12 @@ export function App() {
         <main id="desk">
           {page === "home" ? (
             <Home copy={copy} locale={locale} hour={hour} query={home} />
-          ) : (
+          ) : page === "shelf" ? (
             <Shelf copy={copy} locale={locale} />
+          ) : (
+            <header className="shelf-head">
+              <h1 className="script">{page === "timeline" ? copy.navTimeline : copy.navConsole}</h1>
+            </header>
           )}
         </main>
         <footer className="foot">

@@ -27,6 +27,41 @@ export function ShelfMark({ className }: Props) {
   )
 }
 
+export function TimelineMark({ className }: Props) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 8.2v2.2M7 13.6v2.2" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <circle cx="7" cy="6.2" r="1.7" fill="currentColor" />
+      <circle cx="7" cy="12" r="1.7" fill="currentColor" />
+      <circle cx="7" cy="17.8" r="1.7" fill="currentColor" />
+      <path
+        d="M10.6 6.2H17.6M10.6 12H15.2M10.6 17.8H16.6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+export function ConsoleMark({ className }: Props) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M7.2 8.4h9.6c1.8 0 2.8 1.5 2.2 3.1l-.5 1.3c-.4.9-1.2 1-1.8.4l-1.2-1.2H9.5l-1.2 1.2c-.6.6-1.4.5-1.8-.4l-.5-1.3c-.6-1.6.4-3.1 2.2-3.1z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M8.3 11.6h2.5M9.55 10.35v2.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <circle cx="15.15" cy="10.85" r="0.85" fill="currentColor" />
+      <circle cx="16.85" cy="12.45" r="0.85" fill="currentColor" />
+    </svg>
+  )
+}
+
 export function SunMark({ className }: Props) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">

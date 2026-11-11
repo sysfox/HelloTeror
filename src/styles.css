@@ -229,7 +229,7 @@ html[data-theme="dusk"] .nav-item.is-on {
   position: fixed;
   z-index: 40;
   top: 16px;
-  right: max(24px, calc((100% - var(--cluster)) / 2));
+  left: max(108px, calc((100% - var(--cluster)) / 2));
   min-width: 148px;
   height: 48px;
   padding: 0 16px 0 12px;
@@ -252,6 +252,30 @@ html[data-theme="dusk"] .nav-item.is-on {
 
 .wx-pill small { font-size: 11px; color: var(--text-soft); line-height: 1.2; }
 
+.pref-pill {
+  position: fixed;
+  z-index: 40;
+  top: 16px;
+  right: max(24px, calc((100% - var(--cluster)) / 2));
+  height: 48px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 999px;
+  background: var(--chip);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(17px) saturate(1.6);
+}
+
+.pref-split {
+  width: 1px;
+  height: 18px;
+  background: color-mix(in srgb, var(--text) 18%, transparent);
+  flex: none;
+}
+
 .cluster {
   position: relative;
   z-index: 1;
@@ -269,7 +293,7 @@ html[data-theme="dusk"] .nav-item.is-on {
 
 .cluster-shelf {
   min-height: 100dvh;
-  padding: 36px 0 88px;
+  padding: 84px 0 88px;
 }
 
 .script {
@@ -1063,6 +1087,7 @@ html.settled .heat span {
 .script { view-transition-name: motto; }
 .island { view-transition-name: dock; }
 .wx-pill { view-transition-name: weather; }
+.pref-pill { view-transition-name: prefs; }
 .nav-item.is-on { view-transition-name: nav-current; }
 
 ::view-transition-old(root) {
@@ -1076,13 +1101,15 @@ html.settled .heat span {
 ::view-transition-group(motto),
 ::view-transition-group(dock),
 ::view-transition-group(weather),
+::view-transition-group(prefs),
 ::view-transition-group(nav-current) {
   animation-duration: 360ms;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (max-width: 900px) {
-  .wx-pill { right: 16px; }
+  .wx-pill { left: 16px; }
+  .pref-pill { right: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

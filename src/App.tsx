@@ -117,6 +117,9 @@ export function App() {
           <ShelfMark />
           <span className="sr">{copy.navShelf}</span>
         </a>
+      </nav>
+
+      <div className="pref-pill" role="group" aria-label={locale === "zh" ? "显示" : "Display"}>
         <button
           className="nav-item"
           type="button"
@@ -125,6 +128,7 @@ export function App() {
         >
           {theme === "dusk" ? <SunMark /> : <MoonMark />}
         </button>
+        <span className="pref-split" aria-hidden="true" />
         <button
           className="nav-item nav-locale"
           type="button"
@@ -133,7 +137,7 @@ export function App() {
         >
           {locale === "zh" ? "EN" : "中"}
         </button>
-      </nav>
+      </div>
 
       <div className="wx-pill">
         {weather ? <WeatherGlyph code={weather.code} /> : <CloudMark />}

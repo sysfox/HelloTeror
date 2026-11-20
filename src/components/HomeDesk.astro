@@ -1,0 +1,239 @@
+---
+import { PLACES, SITE, TOOLS } from "../../shared/site.ts"
+import type { HomePayload } from "../../shared/types.ts"
+import { deskCopy, formatToday, formatWhen, shanghaiHour } from "../copy.ts"
+import Bi from "./Bi.astro"
+import GithubCard from "./GithubCard.astro"
+import Icons from "./Icons.astro"
+import WeatherCard from "./WeatherCard.astro"
+
+interface Props {
+  home: HomePayload
+}
+
+const { home } = Astro.props
+const zh = deskCopy("zh")
+const en = deskCopy("en")
+const hour = shanghaiHour()
+const github = home.github
+const ICON_SLOT = ["d-i1", "d-i2", "d-i3", "d-i4", "d-i5", "d-i6", "d-i7", "d-i8"]
+const TINT: Record<string, string> = {
+  blog: "#2a6998",
+  legacy: "#d97706",
+  pan: "#0f766e",
+  lens: "#7c3aed",
+  status: "#16a34a",
+  github: "#24292f",
+  bilibili: "#fb7299",
+  email: "#4f46e5",
+}
+const LANG: Record<string, string> = {
+  TypeScript: "#3178c6",
+  JavaScript: "#f1e05a",
+  Python: "#f0b429",
+  Vue: "#41b883",
+  Java: "#b07219",
+  Shell: "#89e051",
+  Go: "#00add8",
+  Rust: "#dea584",
+}
+
+function clauses(text: string) {
+  return text.split(/(?<=[，,])/).filter(Boolean)
+}
+
+function numeral(locale: "zh" | "en", value: number) {
+  return value.toLocaleString(locale === "zh" ? "zh-CN" : "en-US")
+}
+
+const writing = home.writing.slice(0, 3)
+---
+
+<main id="desk">
+  <p class="script motto rise">
+    <span class="only-zh">
+      {clauses(zh.motto).map((clause) => <span class="motto-clause">{clause}</span>)}
+    </span>
+    <span class="only-en">
+      {clauses(en.motto).map((clause) => <span class="motto-clause">{clause}</span>)}
+    </span>
+  </p>
+  <div class="who rise">
+    {
+      github?.avatar ? (
+        <img src={github.avatar} alt="" width="32" height="32" decoding="async" fetchpriority="low" />
+      ) : (
+        <span class="who-fallback">T</span>
+      )
+    }
+    <span>
+      <strong>{SITE.author}</strong>
+      <small data-title-zh={zh.mottoAside} data-title-en={en.mottoAside} title={zh.mottoAside}><Bi zh={zh.mottoAside} en={en.mottoAside} /></small>
+    </span>
+  </div>
+
+  <div class="desk">
+    <section class="glass glow card d-greet">
+      <div class="wave greet-mark" aria-hidden="true">👋</div>
+      <h1 class="greet">
+        <span class="only-zh" data-greet="zh">{zh.greet(hour)}</span>
+        <span class="only-en" data-greet="en">{en.greet(hour)}</span>
+      </h1>
+      <p class="date-line">
+        <span class="only-zh" data-today="zh">{formatToday("zh")}</span>
+        <span class="only-en" data-today="en">{formatToday("en")}</span>
+      </p>
+    </section>
+
+    <div class="icon-row">
+      {
+        PLACES.map((place, index) => {
+          const external = place.href.startsWith("http")
+          return (
+            <a
+              class={`glass tile tile-${place.id} ${ICON_SLOT[index] ?? ""}`}
+              href={place.href}
+              style={place.id === "github" ? undefined : `color: ${TINT[place.id] ?? "var(--accent)"}`}
+              target={external ? "_blank" : undefined}
+              rel={external ? "noopener noreferrer" : undefined}
+            >
+              <Icons name="place" id={place.id} />
+              <span class="sr"><Bi zh={place.zh} en={place.en} /></span>
+            </a>
+          )
+        })
+      }
+    </div>
+
+    <section class="glass glow card d-gh">
+      {github ? <GithubCard github={github} /> : <p class="miss"><Bi zh={zh.graphMiss} en={en.graphMiss} /></p>}
+    </section>
+
+    <section class="glass glow card d-write">
+      {
+        writing.length > 0 ? (
+          <ul class="write-list">
+            {writing.map((item) => (
+              <li>
+                <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="miss"><Bi zh={zh.writingMiss} en={en.writingMiss} /></p>
+        )
+      }
+    </section>
+
+    <section class="glass glow card d-note">
+      {
+        home.note ? (
+          <>
+            <h2 class="note-title">
+              <a href={home.note.url} target="_blank" rel="noopener noreferrer">{home.note.title}</a>
+            </h2>
+            {home.note.excerpt ? <p class="excerpt">{home.note.excerpt}</p> : null}
+            <p class="caption">
+              <Bi
+                zh={[home.note.weather, home.note.mood, formatWhen(home.note.date, "zh")].filter(Boolean).join(" · ")}
+                en={[home.note.weather, home.note.mood, formatWhen(home.note.date, "en")].filter(Boolean).join(" · ")}
+              />
+            </p>
+          </>
+        ) : (
+          <p class="miss"><Bi zh={zh.writingMiss} en={en.writingMiss} /></p>
+        )
+      }
+    </section>
+
+    <section class="glass glow card d-wx">
+      {
+        home.weather ? (
+          <WeatherCard weather={home.weather} />
+        ) : (
+          <p class="miss"><Bi zh={zh.weatherMiss} en={en.weatherMiss} /></p>
+        )
+      }
+    </section>
+
+    <section class="glass card d-where">
+      <ul class="place-rows">
+        {
+          PLACES.slice(0, 3).map((place) => {
+            const external = place.href.startsWith("http")
+            return (
+              <li>
+                <a href={place.href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined}>
+                  <strong><Bi zh={place.zh} en={place.en} /></strong>
+                  <small>{place.host}</small>
+                </a>
+              </li>
+            )
+          })
+        }
+      </ul>
+    </section>
+
+    <section class="glass glow card d-me">
+      {
+        github ? (
+          <>
+            <a class="me-head" href={`https://github.com/${github.login}`} target="_blank" rel="noopener noreferrer">
+              {github.avatar ? <img src={github.avatar} alt="" width="36" height="36" decoding="async" fetchpriority="low" /> : <span class="me-fallback">T</span>}
+              <span>
+                <strong>{github.name || SITE.author}</strong>
+                <small>@{github.login}</small>
+              </span>
+            </a>
+            <div class="me-stats">
+              <div>
+                <strong><Bi zh={numeral("zh", github.publicRepos)} en={numeral("en", github.publicRepos)} /></strong>
+                <span><Bi zh={zh.repos} en={en.repos} /></span>
+              </div>
+              <div>
+                <strong><Bi zh={numeral("zh", github.followers)} en={numeral("en", github.followers)} /></strong>
+                <span><Bi zh={zh.followers} en={en.followers} /></span>
+              </div>
+              <div>
+                <strong><Bi zh={numeral("zh", github.stars)} en={numeral("en", github.stars)} /></strong>
+                <span><Bi zh={zh.stars} en={en.stars} /></span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p class="miss"><Bi zh={zh.numbersMiss} en={en.numbersMiss} /></p>
+        )
+      }
+    </section>
+
+    <section class="glass glow card d-act">
+      <h2 class="card-label"><Bi zh={zh.onTheBench} en={en.onTheBench} /></h2>
+      {
+        github && github.repos.length > 0 ? (
+          <ul class="acts">
+            {github.repos.slice(0, 4).map((repo) => (
+              <li>
+                <a href={repo.url} target="_blank" rel="noopener noreferrer">
+                  <i class="dot" style={`background: ${LANG[repo.language ?? ""] ?? "var(--accent)"}`}></i>
+                  <span>{repo.name}</span>
+                  <small>{repo.language}</small>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="miss"><Bi zh={zh.reposMiss} en={en.reposMiss} /></p>
+        )
+      }
+      <a class="more" href="/shelf"><Bi zh={zh.moreShelf} en={en.moreShelf} /></a>
+    </section>
+
+    <section class="glass card d-tools">
+      <h2 class="card-label"><Bi zh={zh.tools} en={en.tools} /></h2>
+      <ul class="tools">
+        {TOOLS.map((tool) => <li>{tool}</li>)}
+      </ul>
+      <p class="caption"><Bi zh={`${zh.where} · ${zh.school}`} en={`${en.where} · ${en.school}`} /></p>
+    </section>
+  </div>
+</main>

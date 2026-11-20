@@ -1,0 +1,111 @@
+---
+import type { GithubDesk, RepoCard } from "../../shared/types.ts"
+import { deskCopy, formatWhen } from "../copy.ts"
+import Bi from "./Bi.astro"
+
+interface Props {
+  github: GithubDesk
+}
+
+const { github } = Astro.props
+const zh = deskCopy("zh")
+const en = deskCopy("en")
+const weeks = github.weeks.slice(-16)
+const LANG: Record<string, string> = {
+  TypeScript: "#3178c6",
+  JavaScript: "#f1e05a",
+  Python: "#f0b429",
+  Vue: "#41b883",
+  Java: "#b07219",
+  Shell: "#89e051",
+  Go: "#00add8",
+  Rust: "#dea584",
+}
+
+function numeral(locale: "zh" | "en", value: number) {
+  return value.toLocaleString(locale === "zh" ? "zh-CN" : "en-US")
+}
+
+function mixLanguages(repos: RepoCard[]) {
+  const counts = new Map<string, number>()
+  for (const repo of repos) {
+    if (!repo.language) continue
+    counts.set(repo.language, (counts.get(repo.language) ?? 0) + 1)
+  }
+  const total = [...counts.values()].reduce((sum, count) => sum + count, 0)
+  if (total === 0) return []
+  const ranked = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([name, count]) => ({ name, pct: Math.round((count / total) * 100) }))
+  const rest = 100 - ranked.reduce((sum, lang) => sum + lang.pct, 0)
+  if (rest > 0) ranked.push({ name: "", pct: rest })
+  return ranked
+}
+
+const langs = mixLanguages(github.repos)
+---
+
+<div class="gh-top">
+  <span class="badge">
+    <i></i>
+    <Bi zh={zh.school} en={en.school} />
+  </span>
+  {
+    weeks.length > 0 ? (
+      <div class="heat" style={`grid-template-columns: repeat(${weeks.length}, minmax(0, 1fr))`}>
+        {weeks.map((week, weekIndex) =>
+          week.days.map((day, dayIndex) => {
+            const level = day ? Math.min(4, Math.max(0, day.level)) : 0
+            const titleZh = day ? (day.count > 0 ? zh.busyDay(formatWhen(day.date, "zh"), day.count) : zh.quietDay(formatWhen(day.date, "zh"))) : ""
+            const titleEn = day ? (day.count > 0 ? en.busyDay(formatWhen(day.date, "en"), day.count) : en.quietDay(formatWhen(day.date, "en"))) : ""
+            return (
+              <span
+                data-title-zh={titleZh}
+                data-title-en={titleEn}
+                title={titleZh}
+                style={`background: ${day ? `var(--heat-${level})` : "transparent"}; animation-delay: ${weekIndex * 28 + dayIndex * 16}ms`}
+              />
+            )
+          }),
+        )}
+      </div>
+    ) : null
+  }
+</div>
+<div class="gh-nums">
+  <p>
+    <strong>
+      {github.yearTotal === null ? "—" : <Bi zh={numeral("zh", github.yearTotal)} en={numeral("en", github.yearTotal)} />}
+    </strong>
+    <span>
+      {github.graphKind === "recent" ? <Bi zh={zh.lately} en={en.lately} /> : <Bi zh={zh.thisYear} en={en.thisYear} />}
+    </span>
+  </p>
+  <p>
+    <strong><Bi zh={numeral("zh", github.publicRepos)} en={numeral("en", github.publicRepos)} /></strong>
+    <span><Bi zh={zh.repos} en={en.repos} /></span>
+  </p>
+</div>
+{
+  langs.length > 0 ? (
+    <div class="langbar">
+      <div class="langtrack">
+        {langs.map((lang) => (
+          <i
+            style={`width: ${lang.pct}%; background: ${lang.name ? (LANG[lang.name] ?? "var(--accent)") : "color-mix(in srgb, var(--text-soft) 45%, transparent)"}`}
+          />
+        ))}
+      </div>
+      <div class="langmeta">
+        {langs
+          .filter((lang) => lang.name)
+          .map((lang) => (
+            <span>
+              {lang.name} {lang.pct}%
+            </span>
+          ))}
+      </div>
+    </div>
+  ) : null
+}

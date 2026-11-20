@@ -1,0 +1,158 @@
+---
+import { PLACES } from "../../shared/site.ts"
+import type { NoteCard, RepoCard, ShelfPayload, WritingCard } from "../../shared/types.ts"
+import { deskCopy, formatWhen } from "../copy.ts"
+import Bi from "./Bi.astro"
+
+interface Props {
+  shelf: ShelfPayload
+}
+
+type Card =
+  | { kind: "writing"; item: WritingCard }
+  | { kind: "note"; item: NoteCard }
+  | { kind: "repo"; item: RepoCard }
+  | { kind: "place"; item: (typeof PLACES)[number] }
+
+const { shelf } = Astro.props
+const zh = deskCopy("zh")
+const en = deskCopy("en")
+const LANG: Record<string, string> = {
+  TypeScript: "#3178c6",
+  JavaScript: "#c7a227",
+  Python: "#3572a5",
+  Vue: "#41b883",
+  Java: "#b07219",
+  Shell: "#6f9e4a",
+  Go: "#00add8",
+  Rust: "#c47a4a",
+}
+
+function mix(writing: Card[], repos: Card[], notes: Card[], places: Card[]) {
+  const columns = [writing, repos, notes, places]
+  const out: Card[] = []
+  let index = 0
+  while (columns.some((column) => column.length > 0)) {
+    const column = columns[index % columns.length]
+    const next = column?.shift()
+    if (next) out.push(next)
+    index += 1
+  }
+  return out
+}
+
+const writing = shelf.writing.map((item) => ({ kind: "writing" as const, item }))
+const notes = shelf.notes.map((item) => ({ kind: "note" as const, item }))
+const repos = shelf.repos.map((item) => ({ kind: "repo" as const, item }))
+const places = PLACES.map((item) => ({ kind: "place" as const, item }))
+const cards = mix(writing, repos, notes, places)
+
+const filters = [
+  { id: "all", zh: zh.all, en: en.all },
+  { id: "writing", zh: zh.posts, en: en.posts },
+  { id: "repos", zh: zh.repoWord, en: en.repoWord },
+  { id: "notes", zh: zh.notes, en: en.notes },
+  { id: "places", zh: zh.places, en: en.places },
+]
+---
+
+<main id="desk">
+  <div class="shelf">
+    <div class="shelf-head">
+      <h1 class="script" id="shelf-title"><Bi zh={zh.shelfTitle} en={en.shelfTitle} /></h1>
+      <p><Bi zh={zh.shelfLead} en={en.shelfLead} /></p>
+      <div class="filters" role="radiogroup" aria-labelledby="shelf-title">
+        {
+          filters.map((item) => (
+            <>
+              <input
+                class="filter-input"
+                type="radio"
+                name="shelf"
+                id={`filter-${item.id}`}
+                checked={item.id === "all"}
+              />
+              <label for={`filter-${item.id}`}>
+                <Bi zh={item.zh} en={item.en} />
+              </label>
+            </>
+          ))
+        }
+      </div>
+    </div>
+    <p class="miss shelf-empty"><Bi zh={zh.empty} en={en.empty} /></p>
+    <div class="shelf-grid">
+      {
+        cards.map((card) => {
+          if (card.kind === "writing") {
+            const item = card.item
+            return (
+              <article class="glass shelf-card" data-kind="writing">
+                {item.cover ? (
+                  <img src={item.cover} alt="" width="440" height="140" loading="lazy" decoding="async" />
+                ) : null}
+                <p class="kicker">{item.category}</p>
+                <h2>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
+                </h2>
+                {item.excerpt ? <p class="excerpt">{item.excerpt}</p> : null}
+                <time datetime={item.date}>
+                  <Bi zh={formatWhen(item.date, "zh")} en={formatWhen(item.date, "en")} />
+                </time>
+              </article>
+            )
+          }
+          if (card.kind === "note") {
+            const item = card.item
+            return (
+              <article class="glass shelf-card" data-kind="note">
+                <p class="kicker"><Bi zh={zh.notes} en={en.notes} /></p>
+                <h2>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
+                </h2>
+                {item.excerpt ? <p class="excerpt">{item.excerpt}</p> : null}
+                <p class="caption">
+                  <Bi
+                    zh={[item.weather, item.mood, formatWhen(item.date, "zh")].filter(Boolean).join(" · ")}
+                    en={[item.weather, item.mood, formatWhen(item.date, "en")].filter(Boolean).join(" · ")}
+                  />
+                </p>
+              </article>
+            )
+          }
+          if (card.kind === "repo") {
+            const item = card.item
+            return (
+              <article class="glass shelf-card" data-kind="repo">
+                <p class="kicker">
+                  <i class="lang" style={`background: ${LANG[item.language ?? ""] ?? "#d4763a"}`}></i>
+                  {item.language ?? <Bi zh={zh.repoWord} en={en.repoWord} />}
+                </p>
+                <h2>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer">{item.name}</a>
+                </h2>
+                {item.description ? <p class="excerpt">{item.description}</p> : null}
+                {item.stars > 0 ? (
+                  <p class="caption"><Bi zh={zh.starCount(item.stars)} en={en.starCount(item.stars)} /></p>
+                ) : null}
+              </article>
+            )
+          }
+          const place = card.item
+          const external = place.href.startsWith("http")
+          return (
+            <article class="glass shelf-card" data-kind="place">
+              <p class="kicker"><Bi zh={zh.places} en={en.places} /></p>
+              <h2>
+                <a href={place.href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined}>
+                  <Bi zh={place.zh} en={place.en} />
+                </a>
+              </h2>
+              <p class="excerpt">{place.host}</p>
+            </article>
+          )
+        })
+      }
+    </div>
+  </div>
+</main>

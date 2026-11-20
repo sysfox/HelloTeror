@@ -91,9 +91,9 @@ const writing = home.writing.slice(0, 3)
           const external = place.href.startsWith("http")
           return (
             <a
-              class={`glass tile ${ICON_SLOT[index] ?? ""}`}
+              class={`glass tile tile-${place.id} ${ICON_SLOT[index] ?? ""}`}
               href={place.href}
-              style={`color: ${TINT[place.id] ?? "var(--accent)"}`}
+              style={place.id === "github" ? undefined : `color: ${TINT[place.id] ?? "var(--accent)"}`}
               target={external ? "_blank" : undefined}
               rel={external ? "noopener noreferrer" : undefined}
             >

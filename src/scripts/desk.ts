@@ -3,14 +3,34 @@ import { formatToday, shanghaiHour } from "../copy.ts"
 type Locale = "zh" | "en"
 type Theme = "paper" | "dusk"
 
-function play(apply: () => void) {
-  document.documentElement.classList.add("settled")
+function play(apply: () => void, kind: "theme" | "locale", origin?: HTMLElement) {
+  const root = document.documentElement
+  root.classList.add("settled")
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  if (!reduce && typeof document.startViewTransition === "function") {
-    document.startViewTransition(apply)
+  if (reduce || typeof document.startViewTransition !== "function") {
+    apply()
     return
   }
-  apply()
+  if (origin) {
+    const rect = origin.getBoundingClientRect()
+    const x = rect.left + rect.width / 2
+    const y = rect.top + rect.height / 2
+    const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))
+    root.style.setProperty("--vt-x", `${x}px`)
+    root.style.setProperty("--vt-y", `${y}px`)
+    root.style.setProperty("--vt-r", `${Math.ceil(radius)}px`)
+  }
+  root.dataset.vt = kind
+  const clear = () => {
+    delete root.dataset.vt
+  }
+  try {
+    const transition = document.startViewTransition(apply)
+    transition.finished.finally(clear)
+  } catch {
+    clear()
+    apply()
+  }
 }
 
 function persist(key: string, value: string) {
@@ -66,20 +86,28 @@ document.addEventListener("click", (event) => {
   const action = button.dataset.action
   if (action === "theme") {
     const next: Theme = document.documentElement.dataset.theme === "dusk" ? "paper" : "dusk"
-    play(() => {
-      document.documentElement.dataset.theme = next
-      persist("teror-fox-theme", next)
-      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", next === "paper" ? "#f5f5f5" : "#0a0a0a")
-    })
+    play(
+      () => {
+        document.documentElement.dataset.theme = next
+        persist("teror-fox-theme", next)
+        document.querySelector('meta[name="theme-color"]')?.setAttribute("content", next === "paper" ? "#f5f5f5" : "#0a0a0a")
+      },
+      "theme",
+      button,
+    )
   }
   if (action === "locale") {
     const next: Locale = document.documentElement.dataset.locale === "en" ? "zh" : "en"
-    play(() => {
-      document.documentElement.dataset.locale = next
-      document.documentElement.lang = next === "zh" ? "zh-CN" : "en"
-      persist("teror-fox-locale", next)
-      syncTitle(next)
-    })
+    play(
+      () => {
+        document.documentElement.dataset.locale = next
+        document.documentElement.lang = next === "zh" ? "zh-CN" : "en"
+        persist("teror-fox-locale", next)
+        syncTitle(next)
+      },
+      "locale",
+      button,
+    )
   }
 })
 

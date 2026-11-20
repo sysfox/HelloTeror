@@ -19,6 +19,7 @@ const items = [
   { id: "timeline", href: "/timeline", name: "timeline" as const, zh: zh.navTimeline, en: en.navTimeline },
   { id: "console", href: "/console", name: "console" as const, zh: zh.navConsole, en: en.navConsole },
 ]
+const navIndex = Math.max(0, items.findIndex((item) => item.id === page))
 
 function kind(code: number): "rain" | "sun" | "cloud" {
   if (code >= 95 || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "rain"
@@ -30,7 +31,8 @@ function kind(code: number): "rain" | "sun" | "cloud" {
 <a class="skip" href="#desk">
   <Bi zh="跳到内容" en="Skip to content" />
 </a>
-<nav class="island" aria-labelledby="nav-label">
+<nav class="island" style={`--nav-i: ${navIndex}`} aria-labelledby="nav-label">
+  <span class="nav-pill" aria-hidden="true"></span>
   <span id="nav-label" class="sr"><Bi zh="页面" en="Pages" /></span>
   {
     items.map((item) => (

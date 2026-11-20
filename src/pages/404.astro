@@ -1,0 +1,20 @@
+---
+import Base from "../layouts/Base.astro"
+import Bi from "../components/Bi.astro"
+---
+
+<Base
+  page="shelf"
+  weather={null}
+  titleZh="找不到这一页"
+  titleEn="This page is not here"
+  descriptionZh="这一页不在桌上。"
+  descriptionEn="This page is not on the desk."
+  robots="noindex"
+>
+  <main id="desk">
+    <header class="shelf-head">
+      <h1 class="script"><Bi zh="这一页不在" en="Not on this desk" /></h1>
+    </header>
+  </main>
+</Base>

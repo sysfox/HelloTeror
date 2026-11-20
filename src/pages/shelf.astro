@@ -1,0 +1,21 @@
+---
+import ShelfBoard from "../components/ShelfBoard.astro"
+import Base from "../layouts/Base.astro"
+import { loadHome, loadShelf } from "../../server/data.ts"
+import { deskCopy } from "../copy.ts"
+
+const [home, shelf] = await Promise.all([loadHome(), loadShelf()])
+const zh = deskCopy("zh")
+const en = deskCopy("en")
+---
+
+<Base
+  page="shelf"
+  weather={home.weather}
+  titleZh={`${zh.shelfTitle} — ${zh.title}`}
+  titleEn={`${en.shelfTitle} — ${en.title}`}
+  descriptionZh={zh.shelfLead}
+  descriptionEn={en.shelfLead}
+>
+  <ShelfBoard shelf={shelf} />
+</Base>

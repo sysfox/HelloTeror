@@ -1,0 +1,37 @@
+---
+import type { WeatherNow } from "../../shared/types.ts"
+import { deskCopy } from "../copy.ts"
+import Bi from "./Bi.astro"
+import Icons from "./Icons.astro"
+
+interface Props {
+  weather: WeatherNow
+}
+
+const { weather } = Astro.props
+const zh = deskCopy("zh")
+const en = deskCopy("en")
+
+function kind(code: number): "rain" | "sun" | "cloud" {
+  if (code >= 95 || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "rain"
+  if (code === 0 || code === 1) return "sun"
+  return "cloud"
+}
+---
+
+<Icons name={kind(weather.code)} class="wx-art" />
+<p class="wx-temp">
+  {weather.tempC}<span>°</span>
+</p>
+<p class="wx-word"><Bi zh={zh.weatherWord(weather.code)} en={en.weatherWord(weather.code)} /></p>
+<p class="wx-city"><Bi zh={zh.where} en={en.where} /></p>
+<div class="wx-meta">
+  <span>
+    <Icons name="drop" />
+    {weather.humidity}%
+  </span>
+  <span>
+    <Icons name="wind" />
+    {weather.windKmh}
+  </span>
+</div>

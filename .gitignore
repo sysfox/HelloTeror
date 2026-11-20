@@ -9,6 +9,7 @@ out/
 build/
 dist/
 dist-server/
+.astro/
 
 # Environment
 .env

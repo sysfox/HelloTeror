@@ -1,0 +1,108 @@
+---
+import { deskCopy } from "../copy.ts"
+import { SITE } from "../../shared/site.ts"
+import type { WeatherNow } from "../../shared/types.ts"
+import Chrome from "../components/Chrome.astro"
+import css from "../styles.css?inline"
+
+interface Props {
+  page: "home" | "shelf" | "timeline" | "console"
+  weather: WeatherNow | null
+  titleZh: string
+  titleEn: string
+  descriptionZh: string
+  descriptionEn: string
+  robots?: string
+}
+
+const { page, weather, titleZh, titleEn, descriptionZh, descriptionEn, robots } = Astro.props
+const locale = Astro.cookies.get("teror-fox-locale")?.value === "en" ? "en" : "zh"
+const theme = Astro.cookies.get("teror-fox-theme")?.value === "dusk" ? "dusk" : "paper"
+const year = new Date().getFullYear()
+const greets = {
+  zh: Array.from({ length: 24 }, (_, hour) => deskCopy("zh").greet(hour)),
+  en: Array.from({ length: 24 }, (_, hour) => deskCopy("en").greet(hour)),
+}
+---
+
+<!doctype html>
+<html
+  lang={locale === "zh" ? "zh-CN" : "en"}
+  data-theme={theme}
+  data-locale={locale}
+  data-title-zh={titleZh}
+  data-title-en={titleEn}
+  data-description-zh={descriptionZh}
+  data-description-en={descriptionEn}
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{locale === "zh" ? titleZh : titleEn}</title>
+    <meta name="description" content={locale === "zh" ? descriptionZh : descriptionEn} />
+    {robots ? <meta name="robots" content={robots} /> : null}
+    <meta name="theme-color" content={theme === "paper" ? "#f5f5f5" : "#0a0a0a"} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      try {
+        var theme = localStorage.getItem("teror-fox-theme")
+        var locale = localStorage.getItem("teror-fox-locale")
+        if (theme !== "paper" && theme !== "dusk") {
+          theme = document.documentElement.dataset.theme === "dusk" ? "dusk" : "paper"
+        }
+        if (locale !== "zh" && locale !== "en") {
+          locale = (navigator.language || "").toLowerCase().indexOf("zh") === 0 ? "zh" : "en"
+        }
+        var root = document.documentElement
+        root.dataset.theme = theme
+        root.dataset.locale = locale
+        root.lang = locale === "zh" ? "zh-CN" : "en"
+        document.title = locale === "zh" ? root.dataset.titleZh : root.dataset.titleEn
+        var description = document.querySelector('meta[name="description"]')
+        if (description) {
+          description.setAttribute("content", locale === "zh" ? root.dataset.descriptionZh : root.dataset.descriptionEn)
+        }
+        var themeColor = document.querySelector('meta[name="theme-color"]')
+        if (themeColor) themeColor.setAttribute("content", theme === "paper" ? "#f5f5f5" : "#0a0a0a")
+        var preload = document.createElement("link")
+        preload.rel = "preload"
+        preload.as = "font"
+        preload.type = "font/woff2"
+        preload.crossOrigin = "anonymous"
+        preload.href = locale === "zh" ? "/fonts/ma-shan-zheng.woff2" : "/fonts/qwitcher-grypen.woff2"
+        document.head.appendChild(preload)
+        var nav = performance.getEntriesByType("navigation")[0]
+        var same = false
+        try {
+          same = !!document.referrer && new URL(document.referrer).origin === location.origin
+        } catch (e) {}
+        if (nav && (nav.type === "back_forward" || (same && nav.type === "navigate"))) {
+          root.classList.add("settled")
+        }
+        window.addEventListener("pageshow", function (event) {
+          if (event.persisted) root.classList.add("settled")
+        })
+      } catch (e) {}
+    </script>
+    <style is:inline set:html={css}></style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="wallpaper" aria-hidden="true"></div>
+      <div class="wash" aria-hidden="true"></div>
+      <Chrome page={page} weather={weather} />
+      <div class={page === "home" ? "cluster cluster-home" : "cluster cluster-shelf"}>
+        <slot />
+        <footer class="foot">
+          <span>© {SITE.startYear}–{year} {SITE.author}</span>
+          <a href={SITE.icp.url} target="_blank" rel="noopener noreferrer">{SITE.icp.number}</a>
+          <span>{SITE.studio}</span>
+        </footer>
+      </div>
+    </div>
+    <script id="greet-hours" type="application/json" is:inline set:html={JSON.stringify(greets)}></script>
+    <script>
+      import "../scripts/desk.ts"
+    </script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+---
+import Base from "../layouts/Base.astro"
+import Bi from "../components/Bi.astro"
+import { loadHome } from "../../server/data.ts"
+import { deskCopy } from "../copy.ts"
+
+const home = await loadHome()
+const zh = deskCopy("zh")
+const en = deskCopy("en")
+---
+
+<Base
+  page="console"
+  weather={home.weather}
+  titleZh={`${zh.navConsole} — ${zh.title}`}
+  titleEn={`${en.navConsole} — ${en.title}`}
+  descriptionZh="游戏机还空着。"
+  descriptionEn="The console is still empty."
+>
+  <main id="desk">
+    <header class="shelf-head">
+      <h1 class="script"><Bi zh={zh.navConsole} en={en.navConsole} /></h1>
+    </header>
+  </main>
+</Base>

@@ -1,0 +1,21 @@
+---
+import HomeDesk from "../components/HomeDesk.astro"
+import Base from "../layouts/Base.astro"
+import { loadHome } from "../../server/data.ts"
+import { deskCopy } from "../copy.ts"
+
+const home = await loadHome()
+const zh = deskCopy("zh")
+const en = deskCopy("en")
+---
+
+<Base
+  page="home"
+  weather={home.weather}
+  titleZh={zh.title}
+  titleEn={en.title}
+  descriptionZh="Teror Fox。人在南京，在河海读自动化，其余时间写代码、记笔记。"
+  descriptionEn="Teror Fox. In Nanjing, studying automation at Hohai, and otherwise writing code and notes."
+>
+  <HomeDesk home={home} />
+</Base>

@@ -1,0 +1,25 @@
+---
+import Base from "../layouts/Base.astro"
+import Bi from "../components/Bi.astro"
+import { loadHome } from "../../server/data.ts"
+import { deskCopy } from "../copy.ts"
+
+const home = await loadHome()
+const zh = deskCopy("zh")
+const en = deskCopy("en")
+---
+
+<Base
+  page="timeline"
+  weather={home.weather}
+  titleZh={`${zh.navTimeline} — ${zh.title}`}
+  titleEn={`${en.navTimeline} — ${en.title}`}
+  descriptionZh="时间线还空着。"
+  descriptionEn="The timeline is still empty."
+>
+  <main id="desk">
+    <header class="shelf-head">
+      <h1 class="script"><Bi zh={zh.navTimeline} en={en.navTimeline} /></h1>
+    </header>
+  </main>
+</Base>

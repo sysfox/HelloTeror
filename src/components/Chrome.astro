@@ -1,0 +1,89 @@
+---
+import { deskCopy } from "../copy.ts"
+import type { WeatherNow } from "../../shared/types.ts"
+import Bi from "./Bi.astro"
+import Icons from "./Icons.astro"
+
+interface Props {
+  page: "home" | "shelf" | "timeline" | "console"
+  weather: WeatherNow | null
+}
+
+const { page, weather } = Astro.props
+const zh = deskCopy("zh")
+const en = deskCopy("en")
+
+const items = [
+  { id: "home", href: "/", name: "home" as const, zh: zh.navHome, en: en.navHome },
+  { id: "shelf", href: "/shelf", name: "shelf" as const, zh: zh.navShelf, en: en.navShelf },
+  { id: "timeline", href: "/timeline", name: "timeline" as const, zh: zh.navTimeline, en: en.navTimeline },
+  { id: "console", href: "/console", name: "console" as const, zh: zh.navConsole, en: en.navConsole },
+]
+
+function kind(code: number): "rain" | "sun" | "cloud" {
+  if (code >= 95 || (code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "rain"
+  if (code === 0 || code === 1) return "sun"
+  return "cloud"
+}
+---
+
+<a class="skip" href="#desk">
+  <Bi zh="跳到内容" en="Skip to content" />
+</a>
+<nav class="island" aria-labelledby="nav-label">
+  <span id="nav-label" class="sr"><Bi zh="页面" en="Pages" /></span>
+  {
+    items.map((item) => (
+      <a
+        class={page === item.id ? "nav-item is-on" : "nav-item"}
+        href={item.href}
+        aria-current={page === item.id ? "page" : undefined}
+      >
+        <Icons name={item.name} />
+        <span class="sr">
+          <Bi zh={item.zh} en={item.en} />
+        </span>
+      </a>
+    ))
+  }
+</nav>
+
+<div class="pref-pill" role="group" aria-labelledby="pref-label">
+  <span id="pref-label" class="sr"><Bi zh="显示" en="Display" /></span>
+  <button class="nav-item" type="button" data-action="theme">
+    <span class="only-paper">
+      <Icons name="moon" />
+      <span class="sr"><Bi zh={zh.toNight} en={en.toNight} /></span>
+    </span>
+    <span class="only-dusk">
+      <Icons name="sun" />
+      <span class="sr"><Bi zh={zh.toPaper} en={en.toPaper} /></span>
+    </span>
+  </button>
+  <span class="pref-split" aria-hidden="true"></span>
+  <button class="nav-item nav-locale" type="button" data-action="locale">
+    <span class="only-zh" aria-hidden="true">EN</span>
+    <span class="sr only-zh">{zh.toEnglish}</span>
+    <span class="only-en" aria-hidden="true">中</span>
+    <span class="sr only-en">{en.toChinese}</span>
+  </button>
+</div>
+
+<div class="wx-pill">
+  {weather ? <Icons name={kind(weather.code)} /> : <Icons name="cloud" />}
+  <span>
+    <strong>
+      {
+        weather ? (
+          <Bi
+            zh={`${weather.tempC}°C ${zh.weatherWord(weather.code)}`}
+            en={`${weather.tempC}°C ${en.weatherWord(weather.code)}`}
+          />
+        ) : (
+          <Bi zh={zh.weatherMiss} en={en.weatherMiss} />
+        )
+      }
+    </strong>
+    <small><Bi zh="南京" en="Nanjing" /></small>
+  </span>
+</div>
